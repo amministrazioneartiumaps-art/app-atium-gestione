@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1B3A6B">
+<link rel="manifest" id="pwa-manifest">
+<script>
+var manifest = {
+  name: "Centro Servizi CAF Patronato",
+  short_name: "Centro Servizi",
+  description: "App clienti Centro Servizi CAF Patronato",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#1B3A6B",
+  theme_color: "#1B3A6B",
+  orientation: "portrait",
+  icons: [
+    { src: "https://via.placeholder.com/192x192/1B3A6B/ffffff?text=CS", sizes: "192x192", type: "image/png" },
+    { src: "https://via.placeholder.com/512x512/1B3A6B/ffffff?text=CS", sizes: "512x512", type: "image/png" }
+  ]
+};
+var blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+var url = URL.createObjectURL(blob);
+document.getElementById('pwa-manifest').setAttribute('href', url);
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Centro Servizi">
+<title>Centro Servizi — Area Clienti</title>
+<style>
+:root {
+  --arancio:#F47920;--arancio-light:#FFF0E4;--arancio-dark:#D96510;
+  --blu:#1B3A6B;--blu-mid:#2E5BA8;--blu-light:#EEF3FB;
+  --grigio:#6B7280;--grigio-light:#F3F4F6;--grigio-border:#E5E7EB;
+  --testo:#1F2937;--verde:#059669;--verde-light:#ECFDF5;
+  --rosso:#DC2626;--rosso-light:#FEE2E2;--viola:#7C3AED;--viola-light:#F5F3FF;
+  --nav:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#1B3A6B;position:fixed;overscroll-behavior:none;touch-action:pan-y;}
+#app{width:100%;height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:#F3F4F6;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,0.2);}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;display:none;flex-direction:column;background:#F3F4F6;}
+.screen.active{display:flex;}
+.screen.no-nav{bottom:0;}
+.screen.with-nav{bottom:var(--nav);}
+#screen-login{background:#1B3A6B;justify-content:center;align-items:center;padding:32px 28px;}
+.ll{width:80px;height:80px;background:#F47920;border-radius:22px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 8px 28px rgba(244,121,32,0.45);}
+.ll svg{width:42px;height:42px;fill:white;}
+.lt{font-size:26px;font-weight:800;color:white;text-align:center;margin-bottom:4px;}
+.ls1{font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.ls2{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase;margin-bottom:36px;}
+.lf{width:100%;display:flex;flex-direction:column;gap:14px;}
+.fg0{display:flex;flex-direction:column;gap:7px;}
+.fg0 label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.45);}
+.fg0 input{height:50px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:0 16px;font-size:15px;color:white;outline:none;}
+.fg0 input:focus{border-color:#F47920;background:rgba(255,255,255,0.15);}
+.fg0 input::placeholder{color:rgba(255,255,255,0.3);}
+.btn-login{height:52px;background:#F47920;border:none;border-radius:14px;font-size:15px;font-weight:700;color:white;cursor:pointer;margin-top:4px;box-shadow:0 4px 18px rgba(244,121,32,0.4);}
+.lerr{display:none;background:rgba(220,38,38,0.2);border:1px solid rgba(220,38,38,0.4);border-radius:10px;padding:10px 14px;font-size:12px;color:#FCA5A5;text-align:center;}
+.lerr.show{display:block;}
+.lric{display:flex;align-items:center;gap:8px;}
+.lric input{width:18px;height:18px;accent-color:#F47920;cursor:pointer;}
+.lric label{font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;}
+.lhelp{margin-top:16px;font-size:11px;color:rgba(255,255,255,0.3);text-align:center;}
+.ph{background:#1B3A6B;padding:16px 18px 18px;flex-shrink:0;}
+.ph h1{font-size:20px;font-weight:800;color:white;}
+.ph .sub{font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.sc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.sc::-webkit-scrollbar{display:none;}
+#bottom-nav{position:absolute;bottom:0;left:0;right:0;height:var(--nav);background:white;border-top:1px solid #E5E7EB;display:none;align-items:center;justify-content:space-around;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.06);}
+#bottom-nav.visible{display:flex;}
+.nb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;height:100%;cursor:pointer;border:none;background:none;padding:8px 0;position:relative;}
+.nb svg{width:22px;height:22px;fill:#9CA3AF;}
+.nb span{font-size:10px;font-weight:500;color:#9CA3AF;}
+.nb.active svg{fill:#F47920;}
+.nb.active span{color:#F47920;font-weight:700;}
+.nbadge{position:absolute;top:8px;margin-left:12px;width:16px;height:16px;background:#F47920;border-radius:50%;font-size:9px;font-weight:800;color:white;display:flex;align-items:center;justify-content:center;}
+.hbar{background:#1B3A6B;padding:14px 18px 22px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.hg{font-size:12px;color:rgba(255,255,255,0.5);}
+.hn{font-size:17px;font-weight:800;color:white;line-height:1.2;}
+.bprf{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.bprf svg{width:22px;height:22px;fill:white;}
+.binfo{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:6px;}
+.binfo svg{width:22px;height:22px;fill:white;}
+.banner{background:linear-gradient(135deg,#F47920,#E86A10);border-radius:16px;padding:16px;margin:-10px 14px 0;display:flex;align-items:center;gap:14px;box-shadow:0 6px 20px rgba(244,121,32,0.35);cursor:pointer;}
+.bni{width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bni svg{width:22px;height:22px;fill:white;}
+.bnl{font-size:11px;color:rgba(255,255,255,0.75);}
+.bnv{font-size:16px;font-weight:700;color:white;margin-top:1px;}
+.st{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6B7280;margin:18px 14px 10px;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px;}
+.sc2{background:white;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 6px rgba(0,0,0,0.06);cursor:pointer;}
+.si{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.si svg{width:18px;height:18px;}
+.sio{background:#FFF0E4;}.sio svg{fill:#F47920;}
+.sib{background:#EEF3FB;}.sib svg{fill:#2E5BA8;}
+.sig{background:#ECFDF5;}.sig svg{fill:#059669;}
+.siv{background:#F5F3FF;}.siv svg{fill:#7C3AED;}
+.sla{font-size:11px;color:#6B7280;}
+.sva{font-size:18px;font-weight:800;color:#1F2937;}
+.al{padding:0 14px;display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.ai{background:white;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.ad{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ado{background:#F47920;}.adb{background:#2E5BA8;}.adg{background:#059669;}
+.ab{flex:1;}
+.at2{font-size:13px;font-weight:600;color:#1F2937;}
+.ad2{font-size:11px;color:#6B7280;margin-top:2px;}
+.badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;white-space:nowrap;}
+.bo{background:#FFF0E4;color:#D96510;}.bb{background:#EEF3FB;color:#2E5BA8;}.bg{background:#ECFDF5;color:#059669;}
+.pl{padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.pc{background:white;border-radius:14px;padding:15px;box-shadow:0 1px 6px rgba(0,0,0,0.06);border-left:4px solid #E5E7EB;cursor:pointer;}
+.pc.sc{border-left-color:#F47920;}.pc.sa{border-left-color:#2E5BA8;}.pc.sg2{border-left-color:#059669;}
+.pt{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.pty{font-size:15px;font-weight:700;color:#1F2937;}
+.pan{font-size:11px;color:#6B7280;margin-top:2px;}
+.pn{font-size:12px;color:#6B7280;line-height:1.4;margin:6px 0 10px;}
+.pb{height:5px;background:#E5E7EB;border-radius:5px;overflow:hidden;}
+.pbf{height:100%;border-radius:5px;}
+.baro{background:#F47920;}.barb{background:#2E5BA8;}.barg{background:#059669;}
+.bk{width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bk svg{width:20px;height:20px;fill:white;}
+.db{padding:14px;display:flex;flex-direction:column;gap:12px;}
+.ic{background:white;border-radius:14px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+.ict{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6B7280;margin-bottom:12px;}
+.ir{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #E5E7EB;}
+.ir:last-child{border-bottom:none;padding-bottom:0;}
+.ik{font-size:12px;color:#6B7280;}
+.iv{font-size:13px;font-weight:600;color:#1F2937;text-align:right;}
+.tl{display:flex;flex-direction:column;}
+.tli{display:flex;gap:12px;padding-bottom:16px;}
+.tll{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+.tld{width:12px;height:12px;border-radius:50%;border:2px solid #F47920;background:white;}
+.tld.f{background:#F47920;}.tld.g{border-color:#E5E7EB;}
+.tlln{width:2px;flex:1;background:#E5E7EB;margin-top:3px;}
+.tli:last-child .tlln{display:none;}
+.tlt{font-size:13px;font-weight:600;color:#1F2937;}
+.tld2{font-size:11px;color:#6B7280;margin-top:2px;}
+.dl{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.di{background:white;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 5px rgba(0,0,0,0.05);}
+.dico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dico svg{width:20px;height:20px;}
+.dip{background:#FEE2E2;}.dip svg{fill:#DC2626;}
+.dii{background:#F5F3FF;}.dii svg{fill:#7C3AED;}
+.diu{background:#FFF0E4;}.diu svg{fill:#F47920;}
+.din{flex:1;min-width:0;}
+.din1{font-size:13px;font-weight:600;color:#1F2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.din2{font-size:11px;color:#6B7280;margin-top:2px;}
+.ddl{width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;background:#EEF3FB;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ddl svg{fill:#2E5BA8;width:16px;height:16px;}
+.cs{background:white;padding:14px;border-bottom:1px solid #E5E7EB;flex-shrink:0;}
+.cn{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cn span{font-size:13px;font-weight:700;color:#1F2937;}
+.cnb{width:30px;height:30px;border-radius:8px;border:none;background:#F3F4F6;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cnb svg{width:16px;height:16px;fill:#6B7280;}
+.cd{display:flex;gap:4px;}
+.cdc{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+.cdn{font-size:9px;font-weight:600;color:#6B7280;text-transform:uppercase;}
+.cdd{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#1F2937;}
+.cdc.sel .cdd{background:#F47920;color:white;}
+.cdc.oggi .cdd{border:2px solid #F47920;color:#F47920;}
+.cdc.oggi.sel .cdd{background:#F47920;color:white;border:none;}
+.cdc.dis .cdn{color:#D1D5DB;}
+.cdc.dis .cdd{color:#D1D5DB;background:#F9FAFB;}
+.cdot{width:5px;height:5px;border-radius:50%;background:#F47920;}
+.apl{padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.apc{background:white;border-radius:14px;padding:15px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);cursor:pointer;}
+.apt{background:#EEF3FB;border-radius:12px;padding:10px 12px;text-align:center;flex-shrink:0;min-width:56px;}
+.apt1{font-size:16px;font-weight:800;color:#1B3A6B;line-height:1;}
+.apt2{font-size:10px;font-weight:600;color:#2E5BA8;margin-top:3px;}
+.api{flex:1;}
+.apt3{font-size:14px;font-weight:700;color:#1F2937;}
+.apt4{font-size:12px;color:#6B7280;margin-top:2px;}
+.apl2{display:flex;align-items:center;gap:5px;margin-top:7px;}
+.apl2 svg{width:11px;height:11px;fill:#F47920;}
+.apl2 span{font-size:11px;color:#F47920;font-weight:600;}
+.ml{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.mi{background:white;border-radius:12px;padding:14px;box-shadow:0 1px 5px rgba(0,0,0,0.05);cursor:pointer;border-left:3px solid transparent;}
+.mi.u{border-left-color:#F47920;}
+.mt{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.mf{font-size:13px;font-weight:700;color:#1F2937;display:flex;align-items:center;gap:6px;}
+.mtime{font-size:11px;color:#6B7280;}
+.mp{font-size:12px;color:#6B7280;line-height:1.45;}
+.udot{width:8px;height:8px;border-radius:50%;background:#F47920;flex-shrink:0;}
+.ftab{display:flex;gap:20px;padding:14px 16px 6px;border-bottom:1px solid #E5E7EB;background:white;}
+.ft{padding:0 0 8px;border:none;background:none;font-size:13px;font-weight:500;color:#6B7280;cursor:pointer;}
+.ft.active{color:#F47920;font-weight:700;}
+.btn-p{display:block;width:100%;height:52px;background:#F47920;border:none;border-radius:14px;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 18px rgba(244,121,32,0.4);}
+.btn-b{display:flex;align-items:center;justify-content:center;gap:10px;width:calc(100% - 28px);margin:8px 14px 16px;height:54px;background:#1B3A6B;border:none;border-radius:14px;font-size:14px;font-weight:700;color:white;cursor:pointer;}
+.btn-b svg{width:20px;height:20px;fill:white;flex-shrink:0;}
+.btn-o{display:flex;align-items:center;justify-content:center;gap:10px;width:calc(100% - 28px);margin:4px 14px 24px;height:52px;background:#F47920;border:none;border-radius:14px;font-size:14px;font-weight:700;color:white;cursor:pointer;}
+.btn-o svg{width:18px;height:18px;fill:white;}
+.mo{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:flex-end;z-index:200;}
+.mo.open{display:flex;}
+.ms{background:white;border-radius:22px 22px 0 0;padding:20px 20px 36px;width:100%;max-height:90vh;overflow-y:auto;}
+.mh{width:40px;height:4px;background:#E5E7EB;border-radius:4px;margin:0 auto 20px;}
+.mt2{font-size:18px;font-weight:800;color:#1F2937;margin-bottom:16px;}
+.fg{margin-bottom:14px;}
+.fg label{font-size:12px;font-weight:600;color:#6B7280;margin-bottom:6px;display:block;}
+.fg input,.fg select,.fg textarea{width:100%;height:46px;border:1.5px solid #E5E7EB;border-radius:10px;padding:0 12px;font-size:14px;color:#1F2937;outline:none;background:white;-webkit-appearance:none;}
+.fg input:focus,.fg select:focus{border-color:#F47920;}
+.fg textarea{height:90px;padding:10px 12px;resize:none;}
+.ccw{background:#F3F4F6;border-radius:12px;padding:12px;margin-bottom:4px;}
+.ccn{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ccn span{font-size:13px;font-weight:700;color:#1F2937;}
+.ccb{width:30px;height:30px;border:none;background:white;border-radius:8px;cursor:pointer;font-size:16px;color:#6B7280;}
+.cch{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
+.cch div{text-align:center;font-size:9px;font-weight:700;color:#6B7280;padding:2px;}
+.cch .dh{color:#D1D5DB;}
+.ccg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.twrap{position:relative;display:inline-block;width:46px;height:26px;}
+.twrap input{opacity:0;width:0;height:0;}
+.tsl{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:26px;transition:.3s;}
+.tkn{position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;display:block;}
+#toast{position:absolute;top:60px;left:20px;right:20px;background:rgba(30,30,30,0.85);backdrop-filter:blur(10px);color:white;border-radius:14px;padding:14px 18px;font-size:13px;font-weight:600;text-align:center;z-index:400;opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.25);}
+#toast.show{opacity:1;transform:translateY(0);}
+#toast.error{background:rgba(200,30,30,0.9);}
+.empty{text-align:center;padding:48px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.empty svg{width:48px;height:48px;fill:#E5E7EB;}
+.empty p{font-size:14px;color:#6B7280;}
+@media(min-width:480px){#app{margin-top:20px;height:calc(100vh - 40px);border-radius:32px;}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+<div id="screen-login" class="screen no-nav active">
+  <div class="ll"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+  <div class="lt">Centro Servizi</div>
+  <div class="ls1">CAF Patronato</div>
+  <div class="ls2">Area Clienti</div>
+  <div class="lf">
+    <div class="fg0"><label>Codice Fiscale</label><input type="text" id="icf" placeholder="Inserisci il tuo codice fiscale" maxlength="16" autocomplete="off" autocapitalize="characters"></div>
+    <div class="fg0"><label>PIN</label><input type="password" id="ipin" placeholder="••••••" maxlength="8"></div>
+    <div class="lerr" id="lerr">Codice fiscale o PIN non valido.</div>
+    <button class="btn-login" onclick="doLogin()">Accedi</button>
+    <div class="lric"><input type="checkbox" id="rcb"><label for="rcb">Ricorda accesso su questo dispositivo</label></div>
+    <div class="lhelp">Riceverai il PIN via WhatsApp dallo studio.</div>
+  </div>
+</div>
+
+<div id="screen-home" class="screen with-nav">
+  <div class="hbar">
+    <div><div class="hg">Benvenuto,</div><div class="hn" id="hnome">—</div></div>
+    <div style="display:flex;align-items:center;gap:0">
+      <button class="binfo" onclick="goTo('contatti')" ontouchend="this.click()" title="Contatti"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
+      <button class="bprf" onclick="goTo('profilo')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></button>
+    </div>
+  </div>
+  <div class="sc">
+    <div class="banner" onclick="goTo('appuntamenti')">
+      <div class="bni"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div>
+      <div style="flex:1"><div class="bnl">Prossimo appuntamento · tocca per gestire</div><div class="bnv" id="bnv">Nessun appuntamento</div></div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+    </div>
+    <div class="st">Riepilogo</div>
+    <div class="sg">
+      <div class="sc2" onclick="goTo('pratiche')"><div class="si sio"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div><div><div class="sla">Pratiche attive</div><div class="sva" id="sp">0</div></div></div>
+      <div class="sc2" onclick="goTo('messaggi')"><div class="si sib"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div><div><div class="sla">Messaggi</div><div class="sva" id="sm">0</div></div></div>
+      <div class="sc2" onclick="goTo('documenti')"><div class="si sig"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div><div><div class="sla">Documenti</div><div class="sva" id="sd">0</div></div></div>
+      <div class="sc2" onclick="goTo('appuntamenti')"><div class="si siv"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div><div><div class="sla">Appuntamenti</div><div class="sva" id="sa">0</div></div></div>
+    </div>
+    <div class="st">Ultime attività</div>
+    <div class="al" id="alist"></div>
+  </div>
+</div>
+
+<div id="screen-pratiche" class="screen with-nav">
+  <div class="ph"><h1>Le mie pratiche</h1></div>
+  <div class="sc">
+    <div class="ftab">
+      <button class="ft active" id="fpt" onclick="filP('tutte','fpt')" ontouchend="this.click()">Tutte</button>
+      <button class="ft" id="fpc" onclick="filP('corso','fpc')" ontouchend="this.click()">In corso</button>
+      <button class="ft" id="fpa" onclick="filP('attesa','fpa')" ontouchend="this.click()">In attesa</button>
+      <button class="ft" id="fpco" onclick="filP('completa','fpco')" ontouchend="this.click()">Completate</button>
+    </div>
+    <div class="pl" id="plist"></div>
+  </div>
+</div>
+
+<div id="screen-dettaglio-pratica" class="screen with-nav">
+  <div class="ph" style="display:flex;align-items:center;gap:12px;">
+    <button class="bk" onclick="goTo('pratiche')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+    <div><h1 id="dtitle" style="font-size:17px;">Dettaglio</h1><div class="sub" id="dsub"></div></div>
+  </div>
+  <div class="sc"><div class="db" id="dbody"></div></div>
+</div>
+
+<div id="screen-documenti" class="screen with-nav">
+  <div class="ph"><h1>Documenti</h1></div>
+  <div class="sc" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+
+    <div style="background:#EFF6FF;border-radius:14px;padding:16px;text-align:center;">
+      <div style="font-size:28px;margin-bottom:6px;">📁</div>
+      <div style="font-size:15px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">Cartella documenti</div>
+      <div style="font-size:13px;color:#3b82f6;line-height:1.5;">I documenti caricati dallo studio<br>sono disponibili qui sotto</div>
+    </div>
+
+    <div id="r2-docs-lista" style="display:flex;flex-direction:column;gap:8px;width:100%;">
+      <div style="text-align:center;color:#94a3b8;font-size:13px;padding:10px;">Caricamento documenti...</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;height:1px;background:#E5E7EB;"></div>
+      <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9CA3AF;">Moduli da compilare</span>
+      <div style="flex:1;height:1px;background:#E5E7EB;"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+
+      <a href="https://mega.nz/file/7vxUiDaa#wv2ucX5MDpgc4V3S3b8xnmzb8D-OeoSSkGgzlbn9_Yw" target="_blank" style="text-decoration:none;background:white;border-radius:14px;padding:14px;border-top:3px solid #1D9E75;display:block;">
+        <div style="width:36px;height:36px;background:#ECFDF5;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#1D9E75"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#1F2937;margin-bottom:2px;">Modello 730</div>
+        <div style="font-size:11px;color:#6B7280;margin-bottom:10px;">Documenti necessari</div>
+        <div style="background:#ECFDF5;border-radius:8px;padding:7px;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#059669"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span style="font-size:11px;font-weight:700;color:#059669;">Scarica PDF</span>
+        </div>
+      </a>
+
+      <a href="https://mega.nz/file/nrRQQaJY#87E9yBOHbTnUa3WEYXTJ-4hN604ptyuCiGuJCvRNyc0" target="_blank" style="text-decoration:none;background:white;border-radius:14px;padding:14px;border-top:3px solid #1A6FBF;display:block;">
+        <div style="width:36px;height:36px;background:#EEF3FB;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#1A6FBF"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#1F2937;margin-bottom:2px;">ISEE</div>
+        <div style="font-size:11px;color:#6B7280;margin-bottom:10px;">Documenti necessari</div>
+        <div style="background:#EEF3FB;border-radius:8px;padding:7px;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#1A6FBF"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span style="font-size:11px;font-weight:700;color:#1A6FBF;">Scarica PDF</span>
+        </div>
+      </a>
+
+      <a href="https://mega.nz/file/73xlAaaC#0RtHWNs-oy4rDIo4e0oRxQ3Vr-6KQJ06aj1x9qiXIRQ" target="_blank" style="text-decoration:none;background:white;border-radius:14px;padding:14px;border-top:3px solid #7B3FA0;display:block;">
+        <div style="width:36px;height:36px;background:#F5F3FF;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#7B3FA0"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#1F2937;margin-bottom:2px;">Successioni</div>
+        <div style="font-size:11px;color:#6B7280;margin-bottom:10px;">Scheda informativa</div>
+        <div style="background:#F5F3FF;border-radius:8px;padding:7px;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#7B3FA0"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span style="font-size:11px;font-weight:700;color:#7B3FA0;">Scarica PDF</span>
+        </div>
+      </a>
+
+      <a href="https://mega.nz/file/fromSJoZ#ky60JmwvdhRJKOV5U9vZaYMvV9WQR6Ed_-sV94oHOm8" target="_blank" style="text-decoration:none;background:white;border-radius:14px;padding:14px;border-top:3px solid #F47920;display:block;">
+        <div style="width:36px;height:36px;background:#FFF0E4;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#F47920"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#1F2937;margin-bottom:2px;">Visita Patente</div>
+        <div style="font-size:11px;color:#6B7280;margin-bottom:10px;">Relazione medica</div>
+        <div style="background:#FFF0E4;border-radius:8px;padding:7px;display:flex;align-items:center;justify-content:center;gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#F47920"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span style="font-size:11px;font-weight:700;color:#F47920;">Scarica PDF</span>
+        </div>
+      </a>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="screen-appuntamenti" class="screen with-nav">
+  <div class="ph"><h1>Appuntamenti</h1></div>
+  <div class="cs">
+    <div class="cn">
+      <button class="cnb" onclick="chW(-1)" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+      <span id="cml">—</span>
+      <button class="cnb" onclick="chW(1)" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+    </div>
+    <div class="cd" id="cdays"></div>
+  </div>
+  <div class="sc"><div class="apl" id="aplist"></div></div>
+
+  <button class="btn-b" onclick="openM('mapt')" ontouchend="this.click()">
+    <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+    <span>Prenota / Richiedi consulenza</span>
+  </button>
+</div>
+
+<div id="screen-messaggi" class="screen with-nav">
+  <div class="ph"><h1>Messaggi</h1><div class="sub">Comunicazioni dallo studio</div></div>
+  <div class="sc"><div class="ml" id="mlist"></div></div>
+</div>
+
+<div id="screen-dettaglio-msg" class="screen with-nav">
+  <div class="ph" style="display:flex;align-items:center;gap:12px;">
+    <button class="bk" onclick="goTo('messaggi')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
+    <h1 style="font-size:17px;">Messaggio</h1>
+  </div>
+  <div class="sc"><div style="padding:16px" id="mdbody"></div></div>
+</div>
+
+<div id="screen-contatti" class="screen with-nav">
+  <div class="ph" style="display:flex;align-items:center;justify-content:space-between">
+    <h1>Contatti</h1>
+    <button onclick="goTo('home')" ontouchend="this.click()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer">✕ Chiudi</button>
+  </div>
+  <div class="sc" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+
+    <!-- Card contatti -->
+    <div style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <!-- Telefono -->
+      <div style="display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid #f1f5f9">
+        <div style="width:44px;height:44px;border-radius:12px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#3b82f6"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Telefono</div>
+          <div style="font-size:15px;font-weight:600;color:#1e293b">320 167 9069</div>
+        </div>
+        <a href="tel:+393201679069" ontouchend="this.click()" style="background:#eff6ff;color:#3b82f6;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;text-decoration:none">Chiama</a>
+      </div>
+      <!-- WhatsApp -->
+      <div style="display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid #f1f5f9">
+        <div style="width:44px;height:44px;border-radius:12px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">WhatsApp</div>
+          <div style="font-size:15px;font-weight:600;color:#1e293b">320 167 9069</div>
+        </div>
+        <a href="https://wa.me/393201679069" target="_blank" ontouchend="this.click()" style="background:#f0fdf4;color:#16a34a;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;text-decoration:none">Scrivi</a>
+      </div>
+      <!-- Email -->
+      <div style="display:flex;align-items:center;gap:14px;padding:16px">
+        <div style="width:44px;height:44px;border-radius:12px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#f59e0b"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Email</div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b">amministrazione.artiumaps@gmail.com</div>
+        </div>
+        <a href="mailto:amministrazione.artiumaps@gmail.com" ontouchend="this.click()" style="background:#fef3c7;color:#d97706;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;text-decoration:none">Scrivi</a>
+      </div>
+    </div>
+
+    <!-- QR Code -->
+    <div style="background:white;border-radius:16px;padding:20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">📍 Vieni a trovarci</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:16px;line-height:1.5">Scansiona il codice o condividilo<br>con chi vuoi farci conoscere!</div>
+      <div id="contatti-qr" style="display:flex;justify-content:center;margin-bottom:12px"></div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:14px">Facci conoscere — condividi la nostra posizione</div>
+      <a href="https://maps.app.goo.gl/WY4H6aE7qir2bXrV8?g_st=ic" target="_blank" ontouchend="this.click()" style="background:#1B3A6B;color:white;border:none;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:600;text-decoration:none;display:block">📍 Apri su Google Maps</a>
+    </div>
+
+    <!-- Orari -->
+    <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#64748b"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+        Orari di apertura
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid #f8fafc;color:#475569"><span style="color:#64748b">Lunedì</span><span style="font-weight:500">09:00 – 12:00</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid #f8fafc;color:#475569"><span style="color:#64748b">Mar – Ven</span><span style="font-weight:500">09:00 – 12:00 / 15:00 – 18:00</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;color:#475569"><span style="color:#64748b">Sab – Dom</span><span style="font-weight:500;color:#dc2626">Chiuso</span></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="screen-profilo" class="screen with-nav">
+  <div class="ph"><h1>Profilo</h1></div>
+  <div class="sc">
+    <div style="padding:14px;display:flex;flex-direction:column;gap:12px;">
+      <div style="background:white;border-radius:14px;padding:18px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:14px;">
+        <div style="width:54px;height:54px;background:#EEF3FB;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="28" height="28" viewBox="0 0 24 24" fill="#2E5BA8"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>
+        <div><div id="pnome" style="font-size:17px;font-weight:800;color:#1F2937;">—</div><div id="pcf" style="font-size:12px;color:#6B7280;margin-top:2px;">—</div></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6B7280;padding:0 4px;">Sicurezza</div>
+      <div style="background:white;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #E5E7EB;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:#EEF3FB;border-radius:10px;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#2E5BA8"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></div>
+            <div><div style="font-size:14px;font-weight:600;color:#1F2937;">Ricorda accesso</div><div style="font-size:11px;color:#6B7280;">Salva credenziali sul dispositivo</div></div>
+          </div>
+          <label class="twrap"><input type="checkbox" id="tr" onchange="togR(this)"><span class="tsl" id="slr"><span class="tkn" id="knr"></span></span></label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #E5E7EB;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:#FFF0E4;border-radius:10px;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#F47920"><path d="M12 1C8.676 1 6 3.676 6 7v1H4v13h16V8h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v1H8V7c0-2.276 1.724-4 4-4zm0 9c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/></svg></div>
+            <div><div style="font-size:14px;font-weight:600;color:#1F2937;">Face ID / Touch ID</div><div style="font-size:11px;color:#6B7280;">Accedi con biometria</div></div>
+          </div>
+          <label class="twrap"><input type="checkbox" id="tb" onchange="togB(this)"><span class="tsl" id="slb"><span class="tkn" id="knb"></span></span></label>
+        </div>
+        <div onclick="openM('mpin')" ontouchend="this.click()" style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:#F5F3FF;border-radius:10px;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></div>
+            <div><div style="font-size:14px;font-weight:600;color:#1F2937;">Cambia PIN</div><div style="font-size:11px;color:#6B7280;">Modifica il PIN di accesso</div></div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#9CA3AF"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6B7280;padding:0 4px;">Notifiche</div>
+      <div style="background:white;border-radius:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;background:#ECFDF5;border-radius:10px;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#059669"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></div>
+            <div><div style="font-size:14px;font-weight:600;color:#1F2937;">Notifiche messaggi</div><div style="font-size:11px;color:#6B7280;">Avvisi per nuovi messaggi</div></div>
+          </div>
+          <label class="twrap"><input type="checkbox" id="tn" checked onchange="togN(this)"><span class="tsl" id="sln" style="background:#F47920"><span class="tkn" id="knn" style="left:23px"></span></span></label>
+        </div>
+      </div>
+      <button onclick="doLogout()" ontouchend="this.click()" style="width:100%;height:52px;background:white;border:1.5px solid #DC2626;border-radius:14px;color:#DC2626;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;">Esci dall'account</button>
+    </div>
+  </div>
+</div>
+
+<div id="bottom-nav">
+  <button class="nb active" data-s="home" onclick="goTo('home')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Home</span></button>
+  <button class="nb" data-s="pratiche" onclick="goTo('pratiche')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg><span>Pratiche</span></button>
+  <button class="nb" data-s="documenti" onclick="goTo('documenti')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg><span>Documenti</span></button>
+  <button class="nb" data-s="appuntamenti" onclick="goTo('appuntamenti')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg><span>Agenda</span></button>
+  <button class="nb" data-s="messaggi" onclick="goTo('messaggi')" ontouchend="this.click()"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><span>Messaggi</span><div class="nbadge" id="bmsg" style="display:none">0</div></button>
+</div>
+
+<div class="mo" id="mup" onclick="closeMBg(event,'mup')"><div class="ms"><div class="mh"></div><div class="mt2">Carica documento</div><div class="fg"><label>Descrizione</label><input type="text" id="updesc" placeholder="Es. CU 2024..."></div><div class="fg"><label>Tipo</label><select id="uptipo"><option value="redditi">Documento redditi</option><option value="spese">Spese detraibili</option><option value="immobili">Documenti immobili</option><option value="altro">Altro</option></select></div><div class="fg"><label>File</label><input type="file" id="upfile" accept=".pdf,.jpg,.png" style="height:auto;padding:10px 12px;"></div><button class="btn-p" onclick="uploadD()" ontouchend="this.click()" style="margin-top:6px;">Invia documento</button></div></div>
+
+<div class="mo" id="mapt" onclick="closeMBg(event,'mapt')">
+  <div class="ms">
+    <div class="mh"></div><div class="mt2" style="display:flex;align-items:center;justify-content:space-between">Prenota / Richiedi<button onclick="closeM('mapt')" style="background:none;border:none;cursor:pointer;padding:4px;color:#6B7280;display:flex;align-items:center"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>
+    <div class="fg"><label>Tipo richiesta</label><select id="atipo" onchange="onTC()"><option value="">— Seleziona —</option><option value="standard">Appuntamento standard (Mar-Ven)</option><option value="rilevante">Pratica rilevante (solo Lunedì)</option><option value="consulenza">Richiesta consulenza</option></select></div>
+    <div id="sap" style="display:none">
+      <div class="fg"><label>Seleziona data</label>
+        <div class="ccw"><div class="ccn"><button type="button" class="ccb" onclick="cM(-1)" ontouchend="this.click()">‹</button><span id="cclbl">—</span><button type="button" class="ccb" onclick="cM(1)" ontouchend="this.click()">›</button></div>
+        <div class="cch"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div class="dh">S</div><div class="dh">D</div></div>
+        <div class="ccg" id="ccgrid"></div></div>
+        <input type="hidden" id="adata"><div id="awarn" style="font-size:11px;color:#DC2626;margin-top:4px;display:none;"></div>
+      </div>
+      <div class="fg"><label>Orario</label><select id="aora"><option value="">— Scegli prima la data —</option></select></div>
+      <div class="fg"><label>Note (opzionale)</label><textarea id="anote" placeholder="Documenti da portare..."></textarea></div>
+      <button class="btn-p" onclick="prenota()" style="margin-top:4px;">Prenota</button>
+    </div>
+    <div id="sco" style="display:none">
+      <div class="fg"><label>Tipo consulenza</label><select id="ctipo"><option value="fiscale">Consulenza fiscale</option><option value="legale">Consulenza legale</option><option value="medico-legale">Consulenza medico-legale</option><option value="tecnica">Consulenza tecnica</option><option value="altro">Altro</option></select></div>
+      <div class="fg"><label>Descrivi la tua esigenza</label><textarea id="cnote" placeholder="Descrivi di cosa hai bisogno..." style="height:110px;"></textarea></div>
+      <button class="btn-p" onclick="inviaCons()" style="margin-top:4px;">Invia richiesta</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="mda" onclick="closeMBg(event,'mda')"><div class="ms"><div class="mh"></div><div class="mt2" id="mdatit">Appuntamento</div><div id="mdainfo" style="margin-bottom:16px;"></div><button onclick="modAppt()" ontouchend="this.click()" style="width:100%;height:50px;background:#1B3A6B;border:none;border-radius:14px;color:white;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">✏️ Modifica appuntamento</button><button onclick="annAppt()" ontouchend="this.click()" style="width:100%;height:50px;background:white;border:1.5px solid #DC2626;border-radius:14px;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;">✕ Annulla appuntamento</button></div></div>
+
+<div class="mo" id="mpin" onclick="closeMBg(event,'mpin')"><div class="ms"><div class="mh"></div><div class="mt2">Cambia PIN</div><div class="fg"><label>PIN attuale</label><input type="password" id="po" placeholder="••••••" maxlength="8"></div><div class="fg"><label>Nuovo PIN</label><input type="password" id="pn" placeholder="••••••" maxlength="8"></div><div class="fg"><label>Conferma nuovo PIN</label><input type="password" id="pc" placeholder="••••••" maxlength="8"></div><button class="btn-p" onclick="chPin()" ontouchend="this.click()" style="margin-top:4px;">Salva nuovo PIN</button></div></div>
+
+<div id="toast"></div>
+</div>
+
+<script>
+(function(){var sx=0,sy=0;document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});document.addEventListener('touchmove',function(e){var t=e.target.tagName.toLowerCase();if(t==='button'||t==='input'||t==='select'||t==='textarea')return;if(Math.abs(e.touches[0].clientX-sx)>Math.abs(e.touches[0].clientY-sy))e.preventDefault();},{passive:false});})();
+
+// ============================================================
+// CONFIGURAZIONE SUPABASE
+// ============================================================
+var SB_URL = 'https://wjkxrmojrshrgjgzeibn.supabase.co';
+var SB_KEY = 'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW';
+
+async function sbFetch(endpoint, options) {
+  var opts = Object.assign({
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY
+    }
+  }, options || {});
+  var res = await fetch(SB_URL + '/rest/v1/' + endpoint, opts);
+  if (!res.ok) throw new Error('Errore API: ' + res.status);
+  return res.json();
+}
+
+async function sbGet(table, params) {
+  var q = params ? '?' + params : '';
+  return sbFetch(table + q);
+}
+
+async function sbPost(table, data) {
+  return sbFetch(table, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+async function sbPatch(table, id, data) {
+  return sbFetch(table + '?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+async function sbDelete(table, id) {
+  return sbFetch(table + '?id=eq.' + id, { method: 'DELETE',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY
+    }
+  });
+}
+
+var D={
+  cli:{cf:'SCCBGV69M27C351B',pin:'1234',nome:'Biagio Sciacca'},
+  prat:[
+    {id:1,tipo:'Modello 730',anno:'2024',stato:'corso',note:'In lavorazione — mancano documenti redditi da lavoro dipendente',prog:60,ape:'15/03/2025',ref:'Biagio',tl:[{t:'Pratica aperta',d:'15 mar 2025',f:true},{t:'Documenti ricevuti',d:'22 mar 2025',f:true},{t:'In lavorazione',d:'10 giu 2025',f:true},{t:'Invio telematico',d:'In attesa',f:false},{t:'Completata',d:'—',f:false}]},
+    {id:2,tipo:'ISEE',anno:'2025',stato:'attesa',note:'In attesa di risposta INPS per DSU precompilata',prog:30,ape:'02/05/2025',ref:'Biagio',tl:[{t:'Pratica aperta',d:'2 mag 2025',f:true},{t:'Richiesta INPS inviata',d:'5 mag 2025',f:true},{t:'Risposta INPS',d:'In attesa',f:false},{t:'Attestazione ISEE',d:'—',f:false}]},
+    {id:3,tipo:'RED',anno:'2024',stato:'completa',note:"Inviata all'INPS il 12 marzo 2025",prog:100,ape:'01/02/2025',ref:'Biagio',tl:[{t:'Pratica aperta',d:'1 feb 2025',f:true},{t:'Documentazione raccolta',d:'8 feb 2025',f:true},{t:'Invio INPS',d:'12 mar 2025',f:true},{t:'Completata',d:'12 mar 2025',f:true}]}
+  ],
+  docs:[
+    {id:1,nome:'730_2024_Biagio.pdf',tipo:'pdf',ori:'studio',data:'10 giu 2025',dim:'245 KB',desc:'Modello 730 anno 2024'},
+    {id:2,nome:'ISEE_2025_attestazione.pdf',tipo:'pdf',ori:'studio',data:'3 giu 2025',dim:'180 KB',desc:'Attestazione ISEE 2025'},
+    {id:3,nome:'CU_2024_inviato.pdf',tipo:'pdf',ori:'mio',data:'28 mag 2025',dim:'92 KB',desc:'Certificazione Unica 2024'}
+  ],
+  appt:[
+    {id:1,tit:'Consegna 730/2025',gior:'Lun 16 Giu',ora:'10:30',sub:'Portare CU e documenti spese',luogo:'Sede principale',data:new Date(2026,5,16,10,30)},
+    {id:2,tit:'Verifica ISEE',gior:'Mer 25 Giu',ora:'15:00',sub:'Controllo documentazione INPS',luogo:'Sede principale',data:new Date(2026,5,25,15,0)}
+  ],
+  msg:[
+    {id:1,da:'Centro Servizi',data:'Oggi, 09:15',testo:"Buongiorno,\n\nvolevo aggiornarla sulla pratica 730/2024. Stiamo procedendo con l'elaborazione.\n\nCi risultano mancanti i dati del reddito da lavoro dipendente (CU 2024).\n\nPuò caricarlo nella sezione Documenti.\n\nCordiali saluti,\nBiagio — Centro Servizi",letto:false},
+    {id:2,da:'Centro Servizi',data:'Ieri, 14:30',testo:"Buon pomeriggio,\n\nil suo attestato ISEE 2025 è disponibile nella sezione Documenti.\n\nCordiali saluti,\nBiagio — Centro Servizi",letto:false},
+    {id:3,da:'Centro Servizi',data:'12 mar 2025',testo:"La pratica RED 2024 è stata completata e inviata all'INPS.\n\nCordiali saluti,\nBiagio — Centro Servizi",letto:true}
+  ]
+};
+
+var cur='login',user=null,filP2='tutte',filD2='tutti',calOff=0,selDate=null,apptCur=null;
+var ccA=new Date().getFullYear(),ccM=new Date().getMonth();
+
+async function doLogin(){
+  var cf=document.getElementById('icf').value.trim().toUpperCase();
+  var pin=document.getElementById('ipin').value.trim();
+  var ric=document.getElementById('rcb').checked;
+  var err=document.getElementById('lerr');
+  var btn=document.querySelector('.btn-login');
+  btn.textContent='Accesso...';btn.disabled=true;
+  try {
+    // Prova login su Supabase
+    var res = await sbGet('clienti', 'cf=eq.'+cf+'&pin=eq.'+pin+'&attivo=eq.true&select=*');
+    if(res && res.length > 0) {
+      var cliente = res[0];
+      err.classList.remove('show');
+      if(ric){localStorage.setItem('_cf',cf);localStorage.setItem('_p',pin);localStorage.setItem('_ok','1');}
+      else{localStorage.removeItem('_cf');localStorage.removeItem('_p');localStorage.removeItem('_ok');}
+      document.getElementById('icf').blur();document.getElementById('ipin').blur();
+      user = { cf: cliente.cf, pin: cliente.pin, nome: cliente.nome + ' ' + (cliente.cognome||''), id: cliente.id, mega_link: cliente.mega_link };
+      D.cli = user;
+      document.getElementById('hnome').textContent=user.nome.trim();
+      goTo('home');document.getElementById('bottom-nav').classList.add('visible');
+      await caricaDatiCliente(cliente.id);
+      renderHome();
+    } else {
+      // Fallback su dati demo
+      if(cf===D.cli.cf&&pin===D.cli.pin){
+        err.classList.remove('show');
+        if(ric){localStorage.setItem('_cf',cf);localStorage.setItem('_p',pin);localStorage.setItem('_ok','1');}
+        user=D.cli;document.getElementById('hnome').textContent=user.nome;
+        goTo('home');document.getElementById('bottom-nav').classList.add('visible');renderHome();
+      } else {
+        err.classList.add('show');document.getElementById('ipin').value='';
+      }
+    }
+  } catch(e) {
+    console.log('Errore Supabase, uso dati demo:', e);
+    // Fallback su dati demo
+    if(cf===D.cli.cf&&pin===D.cli.pin){
+      err.classList.remove('show');
+      user=D.cli;document.getElementById('hnome').textContent=user.nome;
+      goTo('home');document.getElementById('bottom-nav').classList.add('visible');renderHome();
+    } else {
+      err.classList.add('show');document.getElementById('ipin').value='';
+    }
+  } finally {
+    btn.textContent='Accedi';btn.disabled=false;
+  }
+}
+
+async function caricaDatiCliente(clienteId) {
+  try {
+    // Carica pratiche — svuota prima i demo
+    D.prat = [];
+    var prat = await sbGet('pratiche', 'cliente_id=eq.'+clienteId+'&order=aggiornata.desc');
+    if(prat && prat.length > 0) {
+      D.prat = prat.map(function(p) {
+        return { id:p.id, tipo:p.tipo, anno:p.anno||'', stato:p.stato||'corso', note:p.note||'', prog:p.progresso||0, ape:p.aperta_il||'—', ref:p.referente||'Biagio', tl:[] };
+      });
+    }
+    // Carica appuntamenti confermati
+    D.appt = [];
+    var appt = await sbGet('appuntamenti', 'cliente_id=eq.'+clienteId+'&order=data_ora.asc');
+    if(appt && appt.length > 0) {
+      D.appt = appt.map(function(a) {
+        var d = new Date(a.data_ora);
+        var gi=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],me=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+        var ora = d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+        var gior = gi[d.getDay()]+' '+d.getDate()+' '+me[d.getMonth()];
+        return { id:a.id, sbId:a.id, tit:a.titolo||'Appuntamento', gior:gior, ora:ora, sub:a.note||'', luogo:a.luogo||'Sede principale', data:d, stato:a.stato, tipo:'confermato' };
+      });
+    }
+    // Carica prenotazioni in attesa e aggiungile come appuntamenti
+    var prenot = await sbGet('prenotazioni', 'cliente_id=eq.'+clienteId+'&order=creato_il.asc');
+    if(prenot && prenot.length > 0) {
+      prenot.forEach(function(p) {
+        if (!p.data_richiesta) return;
+        var d = new Date(p.data_richiesta + 'T' + (p.ora_richiesta || '09:00:00'));
+        var gi=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],me=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+        var ora = p.ora_richiesta ? p.ora_richiesta.substring(0,5) : '09:00';
+        var gior = gi[d.getDay()]+' '+d.getDate()+' '+me[d.getMonth()];
+        D.appt.push({ id:'prenot_'+p.id, sbId:null, prenotId:p.id, tit:p.tipo||'Appuntamento', gior:gior, ora:ora, sub:p.note||'', luogo:'Sede principale', data:d, stato:'in attesa', tipo:'prenotazione' });
+      });
+      D.appt.sort(function(a,b){return a.data-b.data;});
+    }
+    // Carica messaggi — svuota prima i demo
+    D.msg = [];
+    var msg = await sbGet('messaggi', 'cliente_id=eq.'+clienteId+'&order=inviato_il.desc');
+    if(msg && msg.length > 0) {
+      D.msg = msg.map(function(m) {
+        var d = new Date(m.inviato_il);
+        var oggi = new Date(); oggi.setHours(0,0,0,0);
+        var ieri = new Date(oggi); ieri.setDate(oggi.getDate()-1);
+        var data = d >= oggi ? 'Oggi, '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0') : d >= ieri ? 'Ieri, '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0') : d.toLocaleDateString('it-IT');
+        return { id:m.id, da:'Centro Servizi', data:data, testo:m.testo, letto:m.letto };
+      });
+    }
+    // Carica documenti da Supabase Storage
+    D.docs = [];
+    try {
+      var docsRes = await sbGet('documenti', 'cliente_id=eq.'+clienteId+'&order=caricato_il.desc');
+      if(docsRes && docsRes.length > 0) {
+        D.docs = docsRes.map(function(d) {
+          return { id:d.id, nome:d.nome_file||'Documento', tipo:d.tipo||'pdf', ori:d.caricato_da||'studio', data:d.caricato_il ? new Date(d.caricato_il).toLocaleDateString('it-IT') : '—', dim:d.dimensione||'—', desc:d.descrizione||d.nome_file||'' };
+        });
+      }
+    } catch(e2) { console.log('Docs non disponibili:', e2); }
+  } catch(e) {
+    console.log('Errore caricamento dati:', e);
+  }
+}
+document.getElementById('ipin').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+document.addEventListener('DOMContentLoaded',function(){
+  var cf=localStorage.getItem('_cf'),p=localStorage.getItem('_p'),ok=localStorage.getItem('_ok');
+  if(cf&&p&&ok){
+    document.getElementById('icf').value=cf;document.getElementById('ipin').value=p;document.getElementById('rcb').checked=true;
+    var ls=document.getElementById('screen-login');
+    setTimeout(function(){ls.style.transition='opacity .6s';ls.style.opacity='0';setTimeout(function(){doLogin();ls.style.transition='';ls.style.opacity='';},600);},700);
+  }
+});
+
+function goTo(s){
+  var prev=document.getElementById('screen-'+cur);
+  if(prev){prev.classList.remove('active');prev.style.display='none';}
+  cur=s;var next=document.getElementById('screen-'+s);
+  if(next){next.style.display='flex';next.classList.add('active');}
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.toggle('active',b.dataset.s===s);});
+  if(s==='pratiche')rPrat();
+  if(s==='documenti'){rDocs();}
+  if(s==='appuntamenti'){rCal();rPrenotazioni();}
+  if(s==='contatti'){setTimeout(initQR,100);}
+  if(s==='messaggi')rMsg();
+  if(s==='profilo')rPrf();
+  if(s==='home')renderHome();
+}
+
+function renderHome(){
+  var ora=new Date();
+  var fut=D.appt.filter(function(a){return a.data>ora;}).sort(function(a,b){return a.data-b.data;});
+  document.getElementById('bnv').textContent=fut.length?fut[0].gior+' · '+fut[0].ora:'Nessun appuntamento';
+  var att=D.prat.filter(function(p){return p.stato!=='completa';});
+  var nl=D.msg.filter(function(m){return !m.letto;});
+  document.getElementById('sp').textContent=att.length;
+  document.getElementById('sm').textContent=nl.length+(nl.length?' nuovi':'');
+  document.getElementById('sd').textContent=D.docs.length;
+  document.getElementById('sa').textContent=D.appt.length;
+  var b=document.getElementById('bmsg');b.style.display=nl.length?'flex':'none';b.textContent=nl.length;
+  document.getElementById('alist').innerHTML=D.prat.slice(0,2).map(function(p){
+    var c=p.stato==='urgente'?'br':p.stato==='corso'?'bo':p.stato==='attesa'?'bb':p.stato==='completata'?'bg':'bo';
+    var l=p.stato==='urgente'?'Urgente':p.stato==='corso'?'In corso':p.stato==='attesa'?'In attesa':p.stato==='completata'?'Completata':'In corso';
+    var d=p.stato==='corso'?'ado':p.stato==='attesa'?'adb':'adg';
+    return '<div class="ai"><div class="ad '+d+'"></div><div class="ab"><div class="at2">'+p.tipo+' '+p.anno+'</div><div class="ad2">Oggi</div></div><span class="badge '+c+'">'+l+'</span></div>';
+  }).join('');
+}
+
+function filP(f,id){filP2=f;['fpt','fpc','fpa','fpco'].forEach(function(i){var b=document.getElementById(i);if(b)b.classList.toggle('active',i===id);});rPrat();}
+function rPrat(){
+  var l=filP2==='tutte'?D.prat:D.prat.filter(function(p){return p.stato===filP2;});
+  var c=document.getElementById('plist');
+  if(!l.length){c.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg><p>Nessuna pratica trovata</p></div>';return;}
+  c.innerHTML=l.map(function(p){
+    var bc=p.stato==='corso'?'bo':p.stato==='attesa'?'bb':'bg';
+    var bl=p.stato==='corso'?'In corso':p.stato==='attesa'?'In attesa':'Completata';
+    var bar=p.stato==='corso'?'baro':p.stato==='attesa'?'barb':'barg';
+    var sc=p.stato==='corso'?'sc':p.stato==='attesa'?'sa':'sg2';
+    return '<div class="pc '+sc+'" onclick="apriP('+p.id+')" ontouchend="this.click()"><div class="pt"><div><div class="pty">'+p.tipo+'</div><div class="pan">Anno '+p.anno+'</div></div><span class="badge '+bc+'">'+bl+'</span></div><div class="pn">'+p.note+'</div><div class="pb"><div class="pbf '+bar+'" style="width:'+p.prog+'%"></div></div></div>';
+  }).join('');
+}
+function apriP(id){
+  var p=D.prat.find(function(x){return x.id===id;});if(!p)return;
+  document.getElementById('dtitle').textContent=p.tipo+' '+p.anno;
+  document.getElementById('dsub').textContent='Anno '+p.anno;
+  var bc=p.stato==='corso'?'bo':p.stato==='attesa'?'bb':'bg';
+  var bl=p.stato==='corso'?'In corso':p.stato==='attesa'?'In attesa':'Completata';
+  var bar=p.stato==='corso'?'baro':p.stato==='attesa'?'barb':'barg';
+  document.getElementById('dbody').innerHTML='<div class="ic"><div class="ict">Informazioni</div><div class="ir"><span class="ik">Tipo</span><span class="iv">'+p.tipo+'</span></div><div class="ir"><span class="ik">Anno</span><span class="iv">'+p.anno+'</span></div><div class="ir"><span class="ik">Stato</span><span class="iv"><span class="badge '+bc+'">'+bl+'</span></span></div><div class="ir"><span class="ik">Apertura</span><span class="iv">'+p.ape+'</span></div><div class="ir"><span class="ik">Referente</span><span class="iv">'+p.ref+'</span></div></div>'
+  +'<div class="ic"><div class="ict">Avanzamento</div><div class="pb" style="margin-bottom:8px"><div class="pbf '+bar+'" style="width:'+p.prog+'%"></div></div><div style="text-align:right;font-size:12px;color:#6B7280">'+p.prog+'% completato</div><div style="margin-top:10px;font-size:13px;color:#6B7280;line-height:1.5">'+p.note+'</div></div>'
+  +'<div class="ic" id="prat-allegati-box"><div class="ict">Documenti</div><div id="prat-allegati-lista" style="font-size:13px;color:#9CA3AF">Caricamento...</div></div>'
+  +'<div class="ic"><div class="ict">Storico</div><div class="tl">'+p.tl.map(function(t){return '<div class="tli"><div class="tll"><div class="tld'+(t.f?' f':' g')+'"></div><div class="tlln"></div></div><div><div class="tlt" style="color:'+(t.f?'#1F2937':'#6B7280')+'">'+t.t+'</div><div class="tld2">'+t.d+'</div></div></div>';}).join('')+'</div></div>';
+  goTo('dettaglio-pratica');
+  caricaAllegatiPratica(p.id);
+}
+
+async function caricaAllegatiPratica(praticaId){
+  var el = document.getElementById('prat-allegati-lista');
+  if (!el) return;
+  try {
+    var res = await fetch(SB_URL+'/rest/v1/allegati_pratiche?pratica_id=eq.'+praticaId+'&order=id.desc', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer '+SB_KEY }
+    });
+    var allegati = await res.json();
+    if (!allegati || !allegati.length) {
+      el.innerHTML = '<div style="color:#9CA3AF;font-size:13px">Nessun documento allegato</div>';
+      return;
+    }
+    var tipoColore = { dichiarazione: '#3D4FBF', f24: '#dc2626', generico: '#1B3A6B' };
+    el.innerHTML = allegati.map(function(a){
+      var col = tipoColore[a.tipo] || '#1B3A6B';
+      var badge = a.tipo && a.tipo !== 'generico'
+        ? '<span style="font-size:10px;padding:2px 7px;border-radius:8px;background:'+(a.tipo==='dichiarazione'?'#EEF0FD':'#FEF2F2')+';color:'+col+';flex-shrink:0">'+(a.tipo==='dichiarazione'?'Dich.':'F24')+'</span>'
+        : '';
+      return '<a href="'+a.url+'" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F9FAFB;border-radius:10px;border:1px solid #E5E7EB;text-decoration:none;color:inherit;margin-bottom:8px">'
+        +'<svg viewBox="0 0 24 24" width="20" height="20" fill="'+col+'"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>'
+        +'<span style="flex:1;font-size:13px;font-weight:600;color:#1F2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+a.nome+'</span>'
+        + badge
+        +'<svg viewBox="0 0 24 24" width="16" height="16" fill="#9CA3AF"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>'
+        +'</a>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#9CA3AF;font-size:13px">Errore caricamento</div>';
+  }
+}
+function filD(f,id){filD2=f;['fdt','fds','fdm'].forEach(function(i){var b=document.getElementById(i);if(b)b.classList.toggle('active',i===id);});rDocs();}
+async function rDocs(){
+  var el = document.getElementById('r2-docs-lista');
+  if (!el || !user || !user.id) return;
+  try {
+    var res = await fetch(SB_URL+'/rest/v1/allegati_clienti?cliente_id=eq.'+user.id+'&order=id.desc', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer '+SB_KEY }
+    });
+    var docs = await res.json();
+    if (!docs || !docs.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;"><div style="font-size:36px;margin-bottom:10px;">📂</div>Nessun documento disponibile.<br>Contatta lo studio per informazioni.</div>';
+      return;
+    }
+    el.innerHTML = docs.map(function(d){
+      return '<a href="'+d.url+'" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:12px;border:1px solid #E5E7EB;text-decoration:none;color:inherit;box-shadow:0 1px 4px rgba(0,0,0,0.06)">'
+        +'<div style="width:40px;height:40px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" width="20" height="20" fill="#1B3A6B"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>'
+        +'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;color:#1F2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.nome+'</div>'
+        +(d.dimensione ? '<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+d.dimensione+'</div>' : '')
+        +'</div>'
+        +'<svg viewBox="0 0 24 24" width="18" height="18" fill="#94a3b8"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>'
+        +'</a>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px;">Errore caricamento documenti</div>';
+  }
+}
+function uploadD(){ /* non usata */ }
+
+function rCal(){
+  var oggi=new Date(),base=new Date(oggi);
+  base.setDate(oggi.getDate()+calOff*7);
+  var lun=new Date(base);lun.setDate(base.getDate()-((base.getDay()+6)%7));
+  var mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  var gi=['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
+  document.getElementById('cml').textContent=mesi[lun.getMonth()]+' '+lun.getFullYear();
+  var row=document.getElementById('cdays');row.innerHTML='';
+  for(var i=0;i<7;i++){
+    var d=new Date(lun);d.setDate(lun.getDate()+i);
+    var dow=d.getDay();var dis=dow===0||dow===6||dow===1;
+    var isOggi=d.toDateString()===oggi.toDateString();
+    var isSel=selDate&&d.toDateString()===selDate.toDateString();
+    var hasEv=D.appt.some(function(a){return a.data.toDateString()===d.toDateString();});
+    var cls='cdc'+(isOggi?' oggi':'')+(isSel&&!dis?' sel':'')+(dis?' dis':'');
+    var cell=document.createElement('div');cell.className=cls;
+    cell.innerHTML='<span class="cdn">'+gi[i]+'</span><div class="cdd">'+d.getDate()+'</div>'+(hasEv&&!dis?'<div class="cdot"></div>':'');
+    if(!dis){(function(dd){cell.onclick=function(){selDate=dd;rCal();};cell.ontouchend=function(){this.click();};})(d);}
+    row.appendChild(cell);
+  }
+  rAppt();
+}
+function chW(dir){calOff+=dir;rCal();}
+
+async function rPrenotazioni() {
+  var wrap = document.getElementById('prenot-lista-wrap');
+  var lista = document.getElementById('prenot-lista');
+  if (!wrap || !lista) return;
+  if (!user || !user.id) { wrap.style.display='none'; return; }
+  try {
+    var res = await fetch('https://wjkxrmojrshrgjgzeibn.supabase.co/rest/v1/prenotazioni?cliente_id=eq.'+user.id+'&order=creato_il.desc', {
+      headers: {'apikey':'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW','Authorization':'Bearer sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW'}
+    });
+    var prenot = await res.json();
+    if (!prenot || !prenot.length) { wrap.style.display='none'; return; }
+    wrap.style.display='block';
+    lista.innerHTML = prenot.map(function(p) {
+      var data = p.data_richiesta ? p.data_richiesta.split('-').reverse().join('/') : '—';
+      var ora = p.ora_richiesta ? p.ora_richiesta.substring(0,5) : '';
+      var tipo = p.tipo || 'Appuntamento';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #F3F4F6">'
+        + '<div style="width:10px;height:10px;border-radius:50%;background:#10B981;flex-shrink:0"></div>'
+        + '<div style="flex:1">'
+        + '<div style="font-size:13px;font-weight:600;color:#1F2937">' + tipo + '</div>'
+        + '<div style="font-size:12px;color:#6B7280">' + data + (ora ? ' · ' + ora : '') + '</div>'
+        + (p.note ? '<div style="font-size:11px;color:#9CA3AF;margin-top:2px">' + p.note + '</div>' : '')
+        + '</div>'
+        + '<button data-pid="'+p.id+'" class="prenot-app-del" style="background:#fee2e2;border:none;border-radius:8px;padding:6px;cursor:pointer;display:flex;align-items:center;justify-content:center">'
+        + '<svg viewBox="0 0 24 24" width="16" height="16" fill="#dc2626"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>'
+        + '</button>'
+        + '</div>';
+    }).join('');
+    // Listener cestini
+    lista.querySelectorAll('.prenot-app-del').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        eliminaPrenotazione(btn.getAttribute('data-pid'));
+      });
+    });
+  } catch(e) { wrap.style.display='none'; }
+}
+
+async function eliminaPrenotazione(pid) {
+  if (!confirm('Eliminare questa prenotazione?')) return;
+  try {
+    await fetch('https://wjkxrmojrshrgjgzeibn.supabase.co/rest/v1/prenotazioni?id=eq.'+pid, {
+      method:'DELETE',
+      headers:{'apikey':'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW','Authorization':'Bearer sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW'}
+    });
+    // Rimuovi dall'array locale e aggiorna calendario
+    D.appt = D.appt.filter(function(a) { return a.prenotId !== pid; });
+    toast2('Prenotazione eliminata','');
+    renderHome();
+    rCal();
+  } catch(e) { toast2('Errore eliminazione','error'); }
+}
+function rAppt(){
+  var l=selDate?D.appt.filter(function(a){return a.data.toDateString()===selDate.toDateString();}):D.appt;
+  var c=document.getElementById('aplist');
+  if(!l.length){c.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg><p>'+(selDate?'Nessun appuntamento in questa data':'Nessun appuntamento')+'</p></div>';return;}
+  var html = '';
+  l.forEach(function(a) {
+    var isPrenot = a.tipo === 'prenotazione';
+    var borderStyle = isPrenot ? 'border-left:3px solid #10B981;' : '';
+    html += '<div class="apc" style="position:relative;' + borderStyle + '">'
+      + '<div onclick="' + (isPrenot ? '' : 'apriA('+a.id+')') + '" style="display:flex;flex:1;align-items:center;gap:0;cursor:' + (isPrenot?'default':'pointer') + '">'
+      + '<div class="apt"><div class="apt1">'+a.ora+'</div><div class="apt2">'+a.gior.split(' ').slice(0,2).join(' ')+'</div></div>'
+      + '<div class="api"><div class="apt3">'+a.tit+'</div>'
+      + '<div class="apt4">'+a.sub+'</div>'
+      + '<div class="apl2"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg><span>'+a.luogo+'</span></div>'
+      + '</div>'
+      + (isPrenot ? '' : '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#9CA3AF;flex-shrink:0;"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>')
+      + '</div>'
+      + '<button data-aid="'+a.id+'" data-sbid="'+(a.sbId||'')+'" data-prenotid="'+(a.prenotId||'')+'" data-isprenot="'+(isPrenot?'1':'0')+'" class="appt-del-btn" style="position:absolute;top:8px;right:8px;background:#fee2e2;border:none;border-radius:8px;padding:5px;cursor:pointer;display:flex;align-items:center;justify-content:center">'
+      + '<svg viewBox="0 0 24 24" width="16" height="16" fill="#dc2626"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>'
+      + '</button>'
+      + '</div>';
+  });
+  c.innerHTML = html;
+  c.querySelectorAll('.appt-del-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (btn.getAttribute('data-isprenot') === '1') {
+        eliminaPrenotazione(btn.getAttribute('data-prenotid'));
+      } else {
+        eliminaAppuntamento(btn.getAttribute('data-aid'), btn.getAttribute('data-sbid'));
+      }
+    });
+  });
+}
+function apriA(id){
+  var a=D.appt.find(function(x){return x.id===id;});if(!a)return;apptCur=id;
+  document.getElementById('mdatit').textContent=a.tit;
+  document.getElementById('mdainfo').innerHTML='<div style="background:#F3F4F6;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;"><div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:#6B7280;">Data</span><span style="font-size:13px;font-weight:600;">'+a.gior+'</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:#6B7280;">Orario</span><span style="font-size:13px;font-weight:600;">'+a.ora+'</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:#6B7280;">Sede</span><span style="font-size:13px;font-weight:600;">'+a.luogo+'</span></div></div>';
+  openM('mda');
+}
+function modAppt(){closeM('mda');setTimeout(function(){openM('mapt');document.getElementById('atipo').value='standard';onTC();},300);}
+function annAppt(){if(!apptCur)return;var i=D.appt.findIndex(function(a){return a.id===apptCur;});if(i!==-1)D.appt.splice(i,1);closeM('mda');toast2('Appuntamento annullato','');renderHome();rCal();}
+
+function onTC(){
+  var t=document.getElementById('atipo').value;
+  document.getElementById('sap').style.display=(t==='standard'||t==='rilevante')?'block':'none';
+  document.getElementById('sco').style.display=t==='consulenza'?'block':'none';
+  document.getElementById('adata').value='';
+  document.getElementById('aora').innerHTML='<option value="">— Scegli prima la data —</option>';
+  ccA=new Date().getFullYear();ccM=new Date().getMonth();rCC();
+}
+function cM(dir){ccM+=dir;if(ccM>11){ccM=0;ccA++;}if(ccM<0){ccM=11;ccA--;}rCC();}
+function rCC(){
+  var t=document.getElementById('atipo').value;
+  var mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  var lbl=document.getElementById('cclbl');if(lbl)lbl.textContent=mesi[ccM]+' '+ccA;
+  var grid=document.getElementById('ccgrid');if(!grid)return;grid.innerHTML='';
+  var primo=new Date(ccA,ccM,1),ultimo=new Date(ccA,ccM+1,0);
+  var oggi=new Date();oggi.setHours(0,0,0,0);
+  var off=(primo.getDay()+6)%7;
+  for(var i=0;i<off;i++){grid.appendChild(document.createElement('div'));}
+  var sv=document.getElementById('adata').value;
+  for(var g=1;g<=ultimo.getDate();g++){
+    var d=new Date(ccA,ccM,g),dow=d.getDay();
+    var past=d<oggi,sd=dow===0||dow===6,lun=dow===1;
+    var dis=past||sd;
+    if(t==='standard')dis=dis||lun;
+    if(t==='rilevante')dis=dis||(dow!==1);
+    var vs=ccA+'-'+String(ccM+1).padStart(2,'0')+'-'+String(g).padStart(2,'0');
+    var isSel=sv===vs;
+    var btn=document.createElement('button');btn.type='button';btn.textContent=g;
+    btn.style.cssText='width:100%;aspect-ratio:1/1;border:none;border-radius:8px;font-size:12px;cursor:'+(dis?'default':'pointer')+';background:'+(isSel?'#F47920':'transparent')+';color:'+(dis?'#D1D5DB':isSel?'white':'#1F2937')+';font-weight:'+(isSel?'700':'500')+';';
+    if(!dis){(function(val,dw){btn.onclick=function(){document.getElementById('adata').value=val;agSlot(dw);rCC();};btn.ontouchend=function(){this.click();};})(vs,dow);}
+    grid.appendChild(btn);
+  }
+}
+// Restituisce gli orari già occupati (da qualsiasi cliente) per una data,
+// guardando sia le prenotazioni in attesa che gli appuntamenti già confermati.
+async function getSlotOccupati(data){
+  var occupati = [];
+  try {
+    var pren = await sbGet('prenotazioni', 'data_richiesta=eq.'+data+'&ora_richiesta=not.is.null&select=ora_richiesta');
+    if(pren && pren.length){
+      pren.forEach(function(p){ if(p.ora_richiesta) occupati.push(p.ora_richiesta.substring(0,5)); });
+    }
+  } catch(e) { console.log('Errore verifica prenotazioni:', e); }
+  try {
+    var inizio = data+'T00:00:00', fine = data+'T23:59:59';
+    var appt = await sbGet('appuntamenti', 'data_ora=gte.'+inizio+'&data_ora=lte.'+fine+'&select=data_ora');
+    if(appt && appt.length){
+      appt.forEach(function(a){
+        var d=new Date(a.data_ora);
+        occupati.push(d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'));
+      });
+    }
+  } catch(e) { console.log('Errore verifica appuntamenti:', e); }
+  return occupati;
+}
+async function agSlot(dw){
+  var t=document.getElementById('atipo').value;
+  var data=document.getElementById('adata').value;
+  var s=document.getElementById('aora');
+  s.innerHTML='<option value="">Verifica disponibilità...</option>';
+  var sl=t==='rilevante'?['09:00','10:00','11:00']:['09:00','10:00','11:00','15:00','16:00','17:00'];
+  var occupati = data ? await getSlotOccupati(data) : [];
+  var liberi = sl.filter(function(x){ return occupati.indexOf(x)===-1; });
+  s.innerHTML='';
+  if(!liberi.length){
+    var o=document.createElement('option');o.value='';o.textContent='Nessun orario disponibile';s.appendChild(o);
+    return;
+  }
+  liberi.forEach(function(x){var o=document.createElement('option');o.value=x;o.textContent=x;s.appendChild(o);});
+}
+async function prenota(){
+  var btnP = document.querySelector('#sap .btn-p');
+  if (btnP && btnP.disabled) return;
+  if (btnP) { btnP.disabled = true; btnP.textContent = 'Invio...'; }
+  var data=document.getElementById('adata').value,ora=document.getElementById('aora').value;
+  if(!data){toast2('Seleziona una data','error');if(btnP){btnP.disabled=false;btnP.textContent='Prenota';}return;}
+  if(!ora){toast2('Seleziona un orario','error');if(btnP){btnP.disabled=false;btnP.textContent='Prenota';}return;}
+  var d=new Date(data+'T'+ora+':00');
+  var gi=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],me=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var et=gi[d.getDay()]+' '+d.getDate()+' '+me[d.getMonth()];
+  var t=document.getElementById('atipo').value;
+  var titolo=t==='rilevante'?'Pratica rilevante':'Appuntamento standard';
+  var note=document.getElementById('anote').value;
+
+  // Controllo finale: nel frattempo qualcun altro potrebbe aver preso questo orario.
+  try {
+    var occupatiOra = await getSlotOccupati(data);
+    if (occupatiOra.indexOf(ora) !== -1) {
+      toast2('Questo orario è stato appena preso da un altro utente. Scegline un altro.','error');
+      if (btnP) { btnP.disabled = false; btnP.textContent = 'Prenota'; }
+      agSlot(d.getDay());
+      return;
+    }
+  } catch(e) { console.log('Errore verifica disponibilità:', e); }
+
+  // Salva su Supabase se connesso
+  var salvataggioOk = false;
+  if(user && user.id) {
+    try {
+      // Salva in prenotazioni (per il gestionale)
+      // L'appuntamento verrà aggiunto da Biagio dopo aver visto la prenotazione
+      await sbPost('prenotazioni', {
+        cliente_id: user.id,
+        data_richiesta: data,
+        ora_richiesta: ora,
+        tipo: titolo,
+        note: note || '',
+        vista: false
+      });
+      salvataggioOk = true;
+    } catch(e) {
+      console.log('Errore salvataggio prenotazione:', e);
+    }
+  }
+  if (btnP) { btnP.disabled = false; btnP.textContent = 'Prenota'; }
+  if (!salvataggioOk) {
+    toast2('Orario non disponibile, riprova con un altro.','error');
+    agSlot(d.getDay());
+    return;
+  }
+  closeM('mapt');document.getElementById('atipo').value='';document.getElementById('sap').style.display='none';document.getElementById('adata').value='';
+  // Ricarica dati per mostrare la prenotazione nel calendario
+  if (user && user.id) { await caricaDatiCliente(user.id); }
+  toast2('Prenotazione inviata! '+et+' alle '+ora,'');renderHome();rCal();
+}
+async function inviaCons(){
+  var n=document.getElementById('cnote').value.trim();if(!n){toast2('Descrivi la tua esigenza','error');return;}
+  var ctipo=document.getElementById('ctipo').value;
+  if(user && user.id) {
+    try {
+      await sbPost('prenotazioni', {
+        cliente_id: user.id,
+        data_richiesta: new Date().toISOString().split('T')[0],
+        ora_richiesta: null,
+        tipo: 'Consulenza ' + ctipo,
+        note: n,
+        vista: false
+      });
+    } catch(e) { console.log('Errore invio consulenza:', e); }
+  }
+  closeM('mapt');document.getElementById('atipo').value='';document.getElementById('sco').style.display='none';document.getElementById('cnote').value='';
+  toast2('Richiesta consulenza inviata!','');
+}
+
+
+async function eliminaAppuntamento(localId, sbId) {
+  if (!confirm('Eliminare questo appuntamento?')) return;
+  // Rimuovi da array locale
+  D.appt = D.appt.filter(function(a) { return String(a.id) !== String(localId); });
+  // Rimuovi da Supabase se ha ID
+  if (sbId && sbId.length > 10) {
+    fetch('https://wjkxrmojrshrgjgzeibn.supabase.co/rest/v1/appuntamenti?id=eq.' + sbId, {
+      method: 'DELETE',
+      headers: { 'apikey': 'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW', 'Authorization': 'Bearer sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW' }
+    }).catch(function(){});
+  }
+  // Rimuovi anche da prenotazioni se esiste
+  if (sbId && sbId.length > 10) {
+    fetch('https://wjkxrmojrshrgjgzeibn.supabase.co/rest/v1/prenotazioni?cliente_id=eq.' + (user && user.id ? user.id : ''), {
+      method: 'DELETE',  
+      headers: { 'apikey': 'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW', 'Authorization': 'Bearer sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW' }
+    }).catch(function(){});
+  }
+  toast2('Appuntamento eliminato', '');
+  renderHome();
+  rCal();
+}
+
+function rMsg(){
+  var nl=D.msg.filter(function(m){return !m.letto;}).length;
+  var b=document.getElementById('bmsg');b.style.display=nl?'flex':'none';b.textContent=nl;
+  document.getElementById('mlist').innerHTML=D.msg.map(function(m){
+    return '<div class="mi'+(m.letto?'':' u')+'" onclick="apriM('+m.id+')" ontouchend="this.click()"><div class="mt"><div class="mf">'+(m.letto?'':'<div class="udot"></div>')+m.da+'</div><div class="mtime">'+m.data+'</div></div><div class="mp">'+m.testo.substring(0,80).replace(/\n/g,' ')+'...</div></div>';
+  }).join('');
+}
+function apriM(id){
+  var m=D.msg.find(function(x){return x.id===id;});if(!m)return;
+  _msgCorrenteId=id;
+  // Segna come letto su Supabase
+  if(m.id && typeof m.id === 'string' && m.id.length > 10) {
+    fetch('https://wjkxrmojrshrgjgzeibn.supabase.co/rest/v1/messaggi?id=eq.'+m.id,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW','Authorization':'Bearer sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW'},body:JSON.stringify({letto:true})}).catch(function(){});
+  }
+  m.letto=true;
+  document.getElementById('mdbody').innerHTML=
+    '<div style="background:white;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+    +'<div><div style="font-size:15px;font-weight:700;color:#1F2937;margin-bottom:4px;">'+m.da+'</div><div style="font-size:12px;color:#6B7280;">'+m.data+'</div></div>'
+    +'<button onclick="eliminaMessaggio()" ontouchend="this.click()" style="background:#fee2e2;border:none;border-radius:8px;padding:6px 10px;color:#dc2626;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px;"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"currentColor\"><path d=\"M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z\"/></svg>Elimina</button>'
+    +'</div></div>'
+    +'<div style="background:white;border-radius:14px;padding:16px;font-size:14px;color:#1F2937;line-height:1.65;box-shadow:0 1px 6px rgba(0,0,0,0.06);">'+m.testo.replace(/\n/g,'<br>')+'</div>';
+  goTo('dettaglio-msg');rMsg();
+}
+var _msgCorrenteId=null;
+function eliminaMessaggio(){
+  var id=_msgCorrenteId;
+  if(!id)return;
+  if(!confirm('Eliminare questo messaggio?'))return;
+  // Elimina da Supabase se ha ID stringa (reale)
+  var m=D.msg.find(function(x){return x.id===id;});
+  if(m && typeof m.id==='string' && m.id.length>10){
+    fetch('https://wjkxrmojrshrgjgzeibn.supabase.co/rest/v1/messaggi?id=eq.'+m.id,{method:'DELETE',headers:{'apikey':'sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW','Authorization':'Bearer sb_publishable_QtzLVjE66bK_A5FH-4NVHg_NFnE9ukW'}}).catch(function(){});
+  }
+  D.msg=D.msg.filter(function(x){return x.id!==id;});
+  _msgCorrenteId=null;
+  goTo('messaggi');rMsg();
+  toast2('Messaggio eliminato','');
+}
+
+function rPrf(){
+  if(!user)return;
+  document.getElementById('pnome').textContent=user.nome;
+  document.getElementById('pcf').textContent=user.cf;
+  var r=localStorage.getItem('_ok')==='1';setTog('r',r);document.getElementById('tr').checked=r;
+  var bio=localStorage.getItem('_bio')==='1';setTog('b',bio);document.getElementById('tb').checked=bio;
+}
+function setTog(n,on){var sl=document.getElementById('sl'+n),kn=document.getElementById('kn'+n);if(!sl)return;sl.style.background=on?'#F47920':'#ccc';kn.style.left=on?'23px':'3px';}
+function togR(el){setTog('r',el.checked);if(el.checked&&user){localStorage.setItem('_cf',user.cf);localStorage.setItem('_p',D.cli.pin);localStorage.setItem('_ok','1');toast2('Accesso salvato','');}else{localStorage.removeItem('_cf');localStorage.removeItem('_p');localStorage.removeItem('_ok');toast2('Accesso rimosso','');}}
+function togB(el){if(el.checked){if(window.PublicKeyCredential){PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function(ok){if(ok){localStorage.setItem('_bio','1');setTog('b',true);toast2('Face ID / Touch ID attivato','');}else{el.checked=false;setTog('b',false);toast2('Biometria non disponibile','error');}}).catch(function(){el.checked=false;setTog('b',false);toast2('Errore biometria','error');});}else{el.checked=false;setTog('b',false);toast2('Biometria non supportata','error');}}else{localStorage.removeItem('_bio');setTog('b',false);toast2('Biometria disattivata','');}}
+function togN(el){setTog('n',el.checked);toast2(el.checked?'Notifiche attivate':'Notifiche disattivate','');}
+function chPin(){var o=document.getElementById('po').value,n=document.getElementById('pn').value,c=document.getElementById('pc').value;if(o!==D.cli.pin){toast2('PIN attuale non corretto','error');return;}if(n.length<4){toast2('PIN troppo corto','error');return;}if(n!==c){toast2('I PIN non coincidono','error');return;}D.cli.pin=n;document.getElementById('po').value='';document.getElementById('pn').value='';document.getElementById('pc').value='';closeM('mpin');toast2('PIN aggiornato!','');}
+function doLogout(){user=null;localStorage.removeItem('_ok');localStorage.removeItem('_cf');localStorage.removeItem('_p');localStorage.removeItem('_bio');document.getElementById('bottom-nav').classList.remove('visible');document.getElementById('icf').value='';document.getElementById('ipin').value='';document.getElementById('rcb').checked=false;['screen-home','screen-pratiche','screen-dettaglio-pratica','screen-documenti','screen-appuntamenti','screen-messaggi','screen-dettaglio-msg','screen-profilo','screen-contatti'].forEach(function(id){var s=document.getElementById(id);if(s){s.classList.remove('active');s.style.display='none';}});cur='login';var l=document.getElementById('screen-login');l.style.display='flex';l.classList.add('active');}
+
+function openM(id){var m=document.getElementById(id);if(m)m.style.display='flex';}
+function closeM(id){var m=document.getElementById(id);if(m)m.style.display='none';}
+function closeMBg(e,id){if(e.target===e.currentTarget)closeM(id);}
+function toast2(msg,tipo){var t=document.getElementById('toast');t.textContent=msg;t.className='show'+(tipo?' '+tipo:'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='';},2800);}
+
+function initQR() {
+  var el = document.getElementById('contatti-qr');
+  if (!el || el.innerHTML !== '') return;
+  try {
+    new QRCode(el, {
+      text: 'https://maps.app.goo.gl/WY4H6aE7qir2bXrV8?g_st=ic',
+      width: 180,
+      height: 180,
+      colorDark: '#1B3A6B',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } catch(e) { console.log('QR error:', e); }
+}
+
+</script>
+</body>
+</html>
