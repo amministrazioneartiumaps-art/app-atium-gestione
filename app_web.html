@@ -202,6 +202,109 @@ tbody td{padding:10px 14px;vertical-align:middle}
 </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:#0f1623;z-index:99999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1a2235;border-radius:14px;padding:40px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div style="text-align:center;margin-bottom:28px;">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAPWklEQVR4nK2aaZAdV3XHf+fc7n5vVm2j0TqS5ZFkWwjbMhBjwDGxMGtiu3AgARcQQjmEFA5QBQmEuBJCUZDgKhJIBZxAqqASKGIHjAghIIvFCxZllRfhBS2WbS2j0WhGo9ne1n3vyYfuN/NmRpoRFOfDTPfru5ztnvM/p1tYhLpX9m/20rhRYKeZXY7ZKjHiWYMEbOYSw4orEAMzy2+lGGiWX0MxsTmbVFRPYewXkT0itmv89PHDC/En53vQ1bNuS5DoL4CbBXpoYaplw/kLSs7fPDIp/hUPrRCzmCAis5QAQjAbFpF71bJ/mBg+ceiCBejs7XuvmXxSRFZOc2O5ZkXOK/M5mM75FnIrNOfaOSVsYaplDxEhmJ0WsTsmh47dtbAAmzeX2s/WP6sitzedobnhr8T4XDmaGm75f6EC5GMl9zizL0wuLX2Ew4frzefaOq/9bP1OFb29mDpvwcU2Xoih5txfdQ0RmT4uqN7eebZ+Jy2Kn75oW9H3p6ryRS5AS7+ONS6U8UXXFgHC+yaHjn0JCgG6etZu9biHBZY3F7kQAZpjFtv01/X/84zAsDNq2TUTwwMHFSBY9DERWd664YUyv9D1uZjKXULO+WyxvYsRiMjyQPQxAOnqWbs1oHtBli0yEzACSsgvcSoIIY/1LQyd69DPtVbrvfkwkxtULshFzRhVspdH3vQmUV127uA9m+omdIinr2QIgaMNRzUocct+ix3WpnAiAsEw76GrhJRirFKHqQZEbibRzVHMzA8s80Q3RQg3LCotkJrxqq6Uj65P2d5uECm/rHg+9YLy0FhMrM2weyHas1zjcUSy8yrcjn6IIqjUyR45QOOBJ9E8y81TzAz/gpndIB09fceBdQttmJpwWVude7Y3WO8y6kFAhESME2nELU/F/LIWEYvMEsAK1xI5h1jeE7/uKpLXXkVAkCzgMVwpJtv1cxp7HkdiN08hcwLCCQVWL6iuItW/rdez3gWqJgRVAkLFhHVJ4B2rPWY6vZkZ1BsQa6AzCXgfaGQtjASDFV1EV19C8AEJlmd5n+HrdfRlW6CzDQvnDwhmhpmtjgC3EP9mRiTCto4mdtH8wAooQnDKZV1CLIYFCBhJbLz3+iq37KjT3QaHhyL+5cdt3H8gIXZACGjPEnRJNxZSzGcggjjNXaerDVnSDlO12al2PrlowccAYngzzqYOcR4xxSyA5dpQMc6kkBk4AhaMT9xU4YNvqpDWPcHD9g3GdVc0ePvnO/jRU2USFaSaImaEYFgIoJIfXoBqg1BroBcQjRaWD9AA3oR7h4yGKOosn6WgEqh5uHvQERCy4HjJxRl/fG2V6lRKIzWyEKjUjaVRgw+/rkopBnOOMHgGf3gAc4XriUNMwDn8U0dhdBJTabrKND9z7xcVwESIHfxgrMzfnygzkUFZoBQLkxbzd886do/modQHuLrf6ChlZL4lchjUa8aL12b0LTe8CZZ5avfcD0dO4cplVBTMY48/R7r7MfQch3deJBJhcRcCXBC8Bj7zrLLrRMJvLw1IFPHguPLEuNAmAcUQhCyEPOo0D1vxJ48FQmhmQQE7NUrtyz8g2rYB60iwk2cIzw+BNyRa8GhO06ICCODFY17Y2ZXyhqWezW3gXMb2CO6LlB+ORjQwnDoePiCMVSPKUYNgOh3zS4mw72jEsREhikCygK1cSnxFP9rXC4kjrFmB9i4ne/oYYXwKcXlYXgibSUfPemuy2gigGLHKdFnoEcqa8jfrAu/sadBuHi8KZjiB1JTvTcR89FiJgTqI93zk9VPcccsUsXnSFEoJHDmVcOu/LeGxY2Vi87gd/USvfyl0tk1Xmk00YCNTpPc+iH/2JFpkZQMkBIL3hXWkKcA6A8iCcW2Px+N4eFhRzUWwYHy6L+V9q1Jq3ghNt6DpJkZ7LPxw1HHbkRJjmSJm/O5VNW6+sk5vJzw5EPGVh9o4cNKRCEj/asq3Xg/lhNBIc/xTrJmHaIHxKo2v3YcNjiKusGRnmfjSPtLHj+QHjuIQG0LZCZ/akXHbphpZ8GA5fLi+2/OulZ5aRg7iWjMtBqrUUnjtkoyd3YGaV0ThmWOO7++P+M6jEXueUMYmDDGHB0qv2E5oSwg+Aze7iBYAn2FdbUSvuTKPRAA+oP1rSN55Pbpx5bQAUVP7W7uN/o7A1JSRuHypCOWtKzPKBGoAVvhjYQMhB2SRBu4aamPXWIlXXlzlI6+d4hVbUrrbPRIMnymnJh3f+HmZf9rTxvieJ2hf2oGt6MyZ1wLYSbEmgplHN61BVy3DTo7k2l65hCCCrllGODgwY4GAsKGc0WaBjd1CbwlSg24NbC95sjA7Ds+QUcLYM5bw0RcSfm/HJN9+/zhvvLxCR5xRb3hqmeHVs2ZJg798wwTf+LNJVp49TuXevVCp5xm4iFgack0beZanHMOqJVjwmAWktyvPP73LCAUfCoqZ0FPKzdeTGNu6PWkQyhLodrlOZhXPJiiKA8aC4xPPR7x4fYXPvXmCrqRG3YO3UMzLo1AajGoW+J0tVe68tYEeOUq27zAS54HQJIch1mwXmeXCqGLB0PYy8YZVEALSXkYK1U/zVZZcowmBN60JKELVlIksTLdFWsnMSES5byzmyVT46zdWWdHZIPUzPt0Ep030bAaVhnHjFZPcdGWdymNHsKn6nN4WSMiZFzOiWoog6MZV2LJOaGRY7GasBgHEyEwwEVKUnasDF7XVGWkYj0wqTvOM3EoCeINdw7BjU+C6S1PqmSDSwrwJFmSmqWUQQkDN8+7rA+1j49ix4Zz5PMNNjzMVqNbxg6MgQnT5hnwZAWmBGJozY5xOheCFLAv0JZ53XZQRcHztTMxoUJwEZpMxlgr7axHXbW3QVQ4Emy3k3NzT1EHq4fKNDfqWpqQnRvKI4oscgIET1DmyfYfwp86gF6/GXdmPCohTGK9ML65mhgDHK0YlM1QhM+NP+o1X99b52XjEZwYSVB2R0owRKDAWYMxgS48nywIyLWSheaBpANOZaw+0R4G1Szzp6GT+nMJtECSOCAdP0Lj/F0hHmfKNvwWdpRy1pp4wPE7THAp5KD5WVQYbLo9oCN1J4HNXerZ2p3xhMOaOk21UcJScIVaYMY4wg8Q8IW1R9/lUP30tmDc0C6AKcVTgJyB4wmNHSO95CKk3KN10NbJ5DVZPc1fzgXDyTBG9QHNMD6Op8sQYRCKYQZoZl3Z5vvpSz1XLMv5xwPHmAxG7zjiqGlNOHF1kxCFjdBLE5SfKmi6vYGqIGEIhdNGZVjXqmTBeBWlL0MghcYw/fpr0v39G9s37wWeU3/Iq4msugUaWM+8Uq9TwA8NFFCoSmZCbdfdgwi1ranmhYVBrwOXdKXe/0nPnM56vPR/zh0diruoWbujOuLKU0g4cHVOSslKv5wdLmliqYFpaQkzBB5UGnJxQ4uAJDz2NP3Cc7NBRQj0lvnQjbW96GWzqJWRZbjgVcEr27CB2dhJxLq8Wm9AgUvjJkHCkImwsG1nRja57WKEZn3mR5+3rMv5rsJ3dQ8KdAzHBK2rCTw51sO+Y54q1deqZL5JrgSCbPaOisk8UKjXlW492MFSPCA/sx4cAnW3El16Evmwz0aXrscRBmuVla6FtyQLp40eQwHQhLB09fSbkSaSewccuq/FXl2TUsjlxH4gjiFQYaQi/OCM8OKQ8cDbmkbGEcpJx2zVVPrBzkhVLMnxWlIuFhRGlLVEefS7ijntK3H+oDV3eRbRxObq1D9e/FrdqCRZp4e82+yWIU+yF09Tu+j5keQ1tZkjnyg2WJynDG6xKPN+9tsFFbRmpl1nmp0h2WlRCKkIV4aGRiM894/jxSeWV2zK+/EcT9C+tUc1y30cgccr/7O/kA/9RYqAS03XtNsrX70BWtBO8xwK5v4XADDYtKjERVITGV39Euv/5ot1StFg6evoyWjoT1QB/sL7Bl65oECwQTFvC45zgUnhGrEYlg68cK/GJJ9vZsrbON95zlk3LG2RAORa++2iJ9/x7O7UVvXS85Rrc5rWYSN5SsdYk1tIdb0azOMLvPUjj7gfzqDVDXkVksPWXshrfPhbz5RciyrEgEpjGcnPhBHmLp+aFRI0Pbk3515dXOHTM8edf76QaIuIIfnki4cPfXEJlaQ8d734NetkGgg9Y5mcxT5GTZsGWOILnTlH/3iPn0KAMarDwdBNX5CFVEef41DMJdx+PaHPgtFm0zc20gpkUsEKp1o3f763zye019hxI+OrDHTgcf/utmBcqCV23vhpdsxRq9TyrYkz38lp6ps17YocNjlL75oPIVH1a+3nOMMT805ET3W0iN7Sy5sSoWMSHHvdUTXn7hnpxKOfnqBy7N+0h1Dy85+KMPcMxX/hRmaWljN3PlOje+SJ0Uy+kGYjNWqeJa6xoDCCCJhHhuSFqX/8pNjR2jiJfCMLuor0e7RVhXnvdmxCL57ZNDT50ScrSyEizc7c4mhZEjJIzHhgu8da9Me2xMVZeQucHb4bOGAk+17tNY7xZDRRzCsEI+w5T/999yEQ9j/EtwuZFlR9Vs5frxPDAQYHvzHWPpiU8EZ8/FPO2h0vcdzpCnJK4vIhq1UYBPwFoeGFHd4PtXcbpKUeyrQ/rTrAQCqehCaryups80ljk4ORZGv/509xtJmczP6MkAZPvTL+hEbJPm9mZeRIAKkYpcuwdjXnH3oTb9kU8MJLg1dEeC4lTnAZEikLTcpfqdsLVKzymgtuyuoAXkgM6IKiA5hBCogg5PU666+dUv/R9/GNHUNWiazefLIQzSvg0FFBiYnjgYGfvxo8DX5wXaYr7kgoex7dPOv5v0HjJMscbVnuu6fH0dyjdzqOQwxAgjo1tHQFigTXLpn0493FD6xlhfIrw3Cmyp45ih08SJus5XI7cAm8aBDH7+MTIwMFpAQAmh164q7On70Wovv98b2sUoS0vgfjZSMKDI0Z3FLio3djaFbik07OuHVaVAksTY7DmSMoJOlEjHDgBYxVsvEoYGiMMjhJOj2ET1TzZOc17QJyXcxAhhPDPlZGZF96zh27eXOo8m34W5fZ5dd55KAAhGCl5UnIC6oyEosYlwsTyhBUsTxzNg+hkxqcXJQEL8150n3Nm54q+95rO+dRgUWrinpZvHpp+ULRMtHhmkrta/r5hYeZFhBDstJjdMTmy2KcGLTTzsYfdLCI9F2qR3wxJ0QywYfg1PvZope6V6zd7cTeKhZ0gl5uFVTDnc5vfHKUiegrYbyJ7nPlFP7f5f/rdDJv8JqQsAAAAAElFTkSuQmCC" style="width:48px;height:48px;border-radius:10px;margin-bottom:12px;">
+      <div style="color:#fff;font-size:20px;font-weight:700;">Gestione CAF</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">Artium APS</div>
+    </div>
+    <div id="login-form">
+      <div style="margin-bottom:16px;">
+        <label style="color:rgba(255,255,255,0.6);font-size:12px;display:block;margin-bottom:6px;">UTENTE</label>
+        <input id="login-user" type="text" autocomplete="username" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;box-sizing:border-box;" placeholder="Username">
+      </div>
+      <div style="margin-bottom:24px;">
+        <label style="color:rgba(255,255,255,0.6);font-size:12px;display:block;margin-bottom:6px;">PASSWORD</label>
+        <input id="login-pass" type="password" autocomplete="current-password" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;box-sizing:border-box;" placeholder="Password">
+      </div>
+      <div id="login-err" style="display:none;color:#f87171;font-size:13px;margin-bottom:14px;text-align:center;"></div>
+      <button onclick="doLogin()" style="width:100%;padding:11px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Accedi</button>
+    </div>
+    <div id="setup-form" style="display:none;">
+      <div style="color:#fff;font-size:14px;text-align:center;margin-bottom:20px;">Primo accesso — imposta la tua password</div>
+      <div style="margin-bottom:16px;">
+        <label style="color:rgba(255,255,255,0.6);font-size:12px;display:block;margin-bottom:6px;">NUOVA PASSWORD</label>
+        <input id="setup-pass1" type="password" autocomplete="new-password" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;box-sizing:border-box;" placeholder="Scegli una password">
+      </div>
+      <div style="margin-bottom:24px;">
+        <label style="color:rgba(255,255,255,0.6);font-size:12px;display:block;margin-bottom:6px;">CONFERMA PASSWORD</label>
+        <input id="setup-pass2" type="password" autocomplete="new-password" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;box-sizing:border-box;" placeholder="Ripeti la password">
+      </div>
+      <div id="setup-err" style="display:none;color:#f87171;font-size:13px;margin-bottom:14px;text-align:center;"></div>
+      <button onclick="doSetup()" style="width:100%;padding:11px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Salva password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const USER = 'SCCBGV69M27C351B';
+  const LS_PASS = 'p360_pass_hash';
+  const LS_AUTH = 'p360_authed';
+
+  function hashStr(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return hash.toString(36);
+  }
+
+  function showLogin() {
+    const screen = document.getElementById('login-screen');
+    screen.style.display = 'flex';
+    const savedPass = localStorage.getItem(LS_PASS);
+    if (!savedPass) {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('setup-form').style.display = 'block';
+    } else {
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('setup-form').style.display = 'none';
+    }
+  }
+
+  window.doLogin = function() {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const err = document.getElementById('login-err');
+    const savedPass = localStorage.getItem(LS_PASS);
+    if (user !== USER || hashStr(pass) !== savedPass) {
+      err.style.display = 'block';
+      err.textContent = 'Credenziali non valide';
+      return;
+    }
+    sessionStorage.setItem(LS_AUTH, '1');
+    document.getElementById('login-screen').style.display = 'none';
+  };
+
+  window.doSetup = function() {
+    const p1 = document.getElementById('setup-pass1').value;
+    const p2 = document.getElementById('setup-pass2').value;
+    const err = document.getElementById('setup-err');
+    if (p1.length < 6) { err.style.display='block'; err.textContent='Password troppo corta (min 6 caratteri)'; return; }
+    if (p1 !== p2) { err.style.display='block'; err.textContent='Le password non coincidono'; return; }
+    localStorage.setItem(LS_PASS, hashStr(p1));
+    sessionStorage.setItem(LS_AUTH, '1');
+    document.getElementById('login-screen').style.display = 'none';
+  };
+
+  // Enter key support
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      if (document.getElementById('setup-form').style.display !== 'none') doSetup();
+      else doLogin();
+    }
+  });
+
+  // Check auth
+  if (!sessionStorage.getItem(LS_AUTH)) showLogin();
+})();
+</script>
+
 <div class="layout">
 
 <!-- SIDEBAR -->
