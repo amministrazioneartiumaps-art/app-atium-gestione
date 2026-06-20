@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artium APS — Gestionale</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f1623">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="P360">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
@@ -309,9 +316,7 @@ tbody td{padding:10px 14px;vertical-align:middle}
       <button onclick="window.open('http://www.mediterraneaweb.it','_blank')" class="sb-link-btn" style="background:#0277bd">
         <i class="ti ti-world"></i><span class="sb-label">Mediterranea Web</span>
       </button>
-      <button onclick="window.open('https://mega.nz','_blank')" class="sb-link-btn" style="background:#1a1a18;border:1px solid #333">
-        <i class="ti ti-brand-mega"></i><span class="sb-label">Backup MEGA</span>
-      </button>
+
     </div>
     <div class="sb-toggle" onclick="toggleSidebar()">
       <i class="ti ti-chevrons-left" id="sb-toggle-icon"></i>
@@ -533,7 +538,8 @@ tbody td{padding:10px 14px;vertical-align:middle}
                 <input id="det-all-nome" placeholder="Nome file (es. 730_2024.pdf)" style="width:100%;font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:6px">
                 <select id="det-all-tipo" style="width:100%;font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid #e2e8f0;margin-bottom:6px;background:#fff">
                   <option value="generico">Documento generico</option>
-                  <option value="dichiarazione">Dichiarazione fiscale (730/UNICO)</option>
+                  <option value="dichiarazione">Dichiarazione fiscale (730)</option>
+                  <option value="unico">Modello UNICO</option>
                   <option value="f24">Modello F24</option>
                 </select>
                 <div style="display:flex;gap:6px">
@@ -1028,7 +1034,6 @@ tbody td{padding:10px 14px;vertical-align:middle}
             <th>Cliente</th>
             <th>Codice fiscale</th>
             <th>Rapporti attivi</th>
-            <th>Documenti</th>
             <th>Azioni</th>
           </tr></thead>
           <tbody id="tbody-rapp-lavoro"><tr><td colspan="5"><div class="loader"><div class="spinner"></div> Caricamento...</div></td></tr></tbody>
@@ -2061,6 +2066,7 @@ tbody td{padding:10px 14px;vertical-align:middle}
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="chiudiModal('modal-rl')">Annulla</button>
+      <button class="btn-secondary" id="rl-btn-duplica" style="display:none" onclick="rlDuplica()"><i class="ti ti-copy"></i> Duplica</button>
       <button class="btn-primary" onclick="rlSalva()"><i class="ti ti-device-floppy"></i> Salva</button>
     </div>
   </div>
@@ -2325,7 +2331,7 @@ tbody td{padding:10px 14px;vertical-align:middle}
           <select id="p-tipo" onchange="pratTipoChange()">
             <option value="">Seleziona tipo…</option>
             <optgroup label="CAF">
-              <option>730</option><option>Modello 730</option><option>ISEE</option><option>ISEU</option>
+              <option>730</option><option>Modello 730</option><option>Modello UNICO</option><option>ISEE</option><option>ISEU</option>
               <option>Red. / IMU</option><option>Successione</option><option>Cedolare secca</option>
             </optgroup>
             <optgroup label="Patronato">
@@ -3212,6 +3218,7 @@ function pratR2RimuoviFile(id) {
 
 function pratR2RenderLista() {
   const el = document.getElementById('p-r2-lista');
+  if (!el) return;
   if (!_pratR2Files.length) { el.innerHTML = ''; return; }
   el.innerHTML = _pratR2Files.map(x => `
     <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
@@ -4799,8 +4806,28 @@ let _acCorrente = null;
 let _acClienteId = null;
 let _acStorico = [];
 
-function acInit() {
-  _acStorico = JSON.parse(localStorage.getItem('ac_storico') || '[]');
+async function acInit() {
+  try {
+    const data = await sbGet('autocert', 'order=creato_il.desc');
+    _acStorico = data || [];
+    // Migra localStorage se ci sono dati vecchi
+    const old = JSON.parse(localStorage.getItem('ac_storico') || '[]');
+    if (old.length) {
+      for (const ac of old) {
+        if (!_acStorico.find(x => x.id === ac.id)) {
+          await sbPost('autocert', {
+            id: ac.id, cliente_id: ac.clienteId, tipo: ac.tipo,
+            data: ac.data, luogo: ac.luogo, destinatario: ac.destinatario,
+            corpo: ac.corpo, dati: ac
+          });
+          _acStorico.unshift({ ...ac, cliente_id: ac.clienteId });
+        }
+      }
+      localStorage.removeItem('ac_storico');
+    }
+  } catch(e) {
+    _acStorico = JSON.parse(localStorage.getItem('ac_storico') || '[]');
+  }
   acRenderStorico();
 }
 
@@ -5061,14 +5088,32 @@ function acLeggiCampi() {
   }
 }
 
-function acSalva() {
+async function acSalva() {
   acLeggiCampi();
-  const idx = _acStorico.findIndex(x => x.id === _acCorrente.id);
-  if (idx >= 0) _acStorico[idx] = _acCorrente;
-  else _acStorico.unshift(_acCorrente);
-  localStorage.setItem('ac_storico', JSON.stringify(_acStorico));
-  acRenderStorico();
-  toast('Autocertificazione salvata', 'success');
+  try {
+    const record = {
+      id: _acCorrente.id,
+      cliente_id: _acCorrente.clienteId || null,
+      tipo: _acCorrente.tipo,
+      data: _acCorrente.data,
+      luogo: _acCorrente.luogo,
+      destinatario: _acCorrente.destinatario,
+      corpo: _acCorrente.corpo,
+      dati: _acCorrente
+    };
+    const idx = _acStorico.findIndex(x => x.id === _acCorrente.id);
+    if (idx >= 0) {
+      await sbPatch('autocert', _acCorrente.id, record);
+      _acStorico[idx] = { ..._acCorrente, cliente_id: _acCorrente.clienteId };
+    } else {
+      await sbPost('autocert', record);
+      _acStorico.unshift({ ..._acCorrente, cliente_id: _acCorrente.clienteId });
+    }
+    acRenderStorico();
+    toast('Autocertificazione salvata', 'success');
+  } catch(e) {
+    toast('Errore salvataggio: ' + e.message, 'error');
+  }
 }
 
 function acRenderStorico() {
@@ -5076,7 +5121,7 @@ function acRenderStorico() {
   if (!el) return;
   if (!_acStorico.length) { el.innerHTML = '<p style="font-size:13px;color:#aaa">Nessuna autocertificazione creata</p>'; return; }
   el.innerHTML = _acStorico.map(ac => {
-    const c = APP.clienti.find(x => x.id === ac.clienteId);
+    const c = APP.clienti.find(x => x.id === (ac.clienteId || ac.cliente_id));
     const nomeC = c ? `${(c.cognome||'').toUpperCase()} ${c.nome||''}` : '—';
     const data  = ac.data ? ac.data.split('-').reverse().join('/') : '';
     return `<div style="display:flex;align-items:center;padding:9px 12px;border:1px solid #e8edf2;border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="acRiapri('${ac.id}')" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
@@ -5095,18 +5140,25 @@ function acRenderStorico() {
 function acRiapri(id) {
   const ac = _acStorico.find(x => x.id === id);
   if (!ac) return;
-  _acCorrente = JSON.parse(JSON.stringify(ac));
+  // Se i dati completi sono in ac.dati (da Supabase), usali
+  _acCorrente = JSON.parse(JSON.stringify(ac.dati && typeof ac.dati === 'object' ? ac.dati : ac));
+  if (!_acCorrente.clienteId && ac.cliente_id) _acCorrente.clienteId = ac.cliente_id;
   const c = APP.clienti.find(x => x.id === ac.clienteId);
   acCaricaScheda(_acCorrente, c);
   document.getElementById('autocert-lista-panel').style.display = 'none';
   document.getElementById('autocert-scheda-panel').style.display = 'block';
 }
 
-function acEliminaStorico(id) {
+async function acEliminaStorico(id) {
   if (!confirm('Eliminare questa autocertificazione?')) return;
-  _acStorico = _acStorico.filter(x => x.id !== id);
-  localStorage.setItem('ac_storico', JSON.stringify(_acStorico));
-  acRenderStorico();
+  try {
+    await sbDelete('autocert', id);
+    _acStorico = _acStorico.filter(x => x.id !== id);
+    acRenderStorico();
+    toast('Autocertificazione eliminata', 'success');
+  } catch(e) {
+    toast('Errore: ' + e.message, 'error');
+  }
 }
 
 function acStampa() {
@@ -7736,7 +7788,7 @@ function rappRender() {
   const tbody = document.getElementById('tbody-rapp-lavoro');
   if (!tbody) return;
   if (!lista.length) {
-    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="ti ti-id-badge"></i>Nessun rapporto trovato</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="ti ti-id-badge"></i>Nessun rapporto trovato</div></td></tr>';
     return;
   }
   tbody.innerHTML = lista.map(r => {
@@ -7745,12 +7797,10 @@ function rappRender() {
     const nome = c ? `${c.cognome||''} ${c.nome||''}`.trim() : '—';
     const cf = c?.cf || '—';
     const nRapp = (d.rapporti||[]).length;
-    const megaLink = d.mega ? `<a href="${d.mega}" target="_blank" style="color:#185FA5;font-size:12px"><i class="ti ti-external-link"></i> MEGA</a>` : '—';
     return `<tr>
       <td><div class="td-nome">${nome}</div></td>
       <td style="font-family:monospace;font-size:12px">${cf}</td>
       <td><span class="badge badge-count">${nRapp} rapport${nRapp===1?'o':'i'}</span></td>
-      <td>${megaLink}</td>
       <td><div class="actions">
         <button class="btn-action primary" onclick="rappApriScheda('${r.id}')"><i class="ti ti-id-badge"></i> Scheda</button>
         <button class="btn-action" onclick="rappApriModal('${r.id}')"><i class="ti ti-edit"></i></button>
@@ -7801,7 +7851,10 @@ function rappRenderRigheModal(rapporti) {
     <div class="rapp-riga" data-idx="${i}" style="border:1px solid #e8edf2;border-radius:8px;padding:12px 14px;margin-bottom:8px;background:#fafbfc">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span style="font-size:12px;font-weight:600;color:#185FA5">Rapporto #${i+1}</span>
-        <button class="btn-action danger" style="padding:2px 6px" onclick="rappRimuoviRiga(${i})"><i class="ti ti-trash"></i></button>
+        <div style="display:flex;gap:4px">
+          <button class="btn-action" style="padding:2px 6px;color:#185FA5;border-color:#bfdbfe;background:#eff6ff" onclick="rappDuplicaRiga(${i})" title="Duplica rapporto"><i class="ti ti-copy"></i></button>
+          <button class="btn-action danger" style="padding:2px 6px" onclick="rappRimuoviRiga(${i})"><i class="ti ti-trash"></i></button>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
         <div><span style="font-size:10px;color:#aaa;text-transform:uppercase;font-weight:600">Datore</span><div style="font-size:13px;font-weight:500;color:#1a1a18">${rp.datore||'—'}</div></div>
@@ -7832,6 +7885,17 @@ function rappAggiungiRiga() {
   // Il salvataggio da qui torna al modal principale
   document.getElementById('modal-rapp-singolo').dataset.context = 'modal';
   document.getElementById('modal-rapp-singolo').classList.add('open');
+}
+
+function rappDuplicaRiga(i) {
+  const cont = document.getElementById('rapp-righe-container');
+  if (!cont._rapporti) return;
+  const orig = cont._rapporti[i];
+  // Duplica le info ma svuota le date (nuovo periodo)
+  const copia = { ...orig, inizio: '', fine: '', noteExtra: '' };
+  cont._rapporti.push(copia);
+  rappRenderRighe(cont._rapporti);
+  toast('Rapporto duplicato — aggiorna le date', 'success');
 }
 
 function rappRimuoviRiga(i) {
@@ -7907,6 +7971,7 @@ function rappRenderScheda(id) {
         <p style="font-size:13px;color:#888">CF: ${c?.cf||'—'}</p>
       </div>
       <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="rappDuplicaScheda('${r.id}')"><i class="ti ti-copy"></i> Duplica</button>
         <button class="btn-secondary" onclick="rappApriModal('${r.id}')"><i class="ti ti-edit"></i> Modifica</button>
         <button class="btn-secondary" style="color:#dc2626;border-color:#fca5a5" onclick="rappElimina('${r.id}','${nome.replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i> Elimina</button>
       </div>
@@ -8065,11 +8130,58 @@ async function rsSalva() {
   }
 }
 
+// ── DUPLICA RAPPORTO DI LAVORO ───────────────────────────────────
+async function rappDuplicaScheda(rappId) {
+  const r = APP_rapp.find(x => x.id === rappId);
+  if (!r) return;
+  const dati = r.dati || {};
+  // Apri modal nuovo rapporto precompilato con stessi dati ma date vuote
+  rappApriModal(null);
+  setTimeout(() => {
+    document.getElementById('rapp-cliente-sel').value = r.cliente_id || '';
+    document.getElementById('rapp-cliente-sel').dispatchEvent(new Event('change'));
+    setTimeout(() => {
+      // Precompila i campi del primo rapporto
+      const rapporti = dati.rapporti || [];
+      if (rapporti.length > 0) {
+        const rp = rapporti[0];
+        const cont = document.getElementById('rapp-righe-container');
+        cont._rapporti = [{ ...rp, inizio: '', fine: '', noteExtra: '' }];
+        rappRenderRighe(cont._rapporti);
+      }
+      toast('Rapporto duplicato — aggiorna le date e salva', 'success');
+    }, 300);
+  }, 200);
+}
+
+
+function rlDuplica() {
+  const clienteId = document.getElementById('rl-cliente-id').value;
+  const datore    = document.getElementById('rl-datore').value;
+  const ccnl      = document.getElementById('rl-ccnl').value;
+  const tipo      = document.getElementById('rl-tipo').value;
+  const qualifica = document.getElementById('rl-qualifica').value;
+  chiudiModal('modal-rl');
+  // Riapri modal come nuovo con stessi dati ma date vuote
+  setTimeout(() => {
+    rlApriModal(clienteId, null);
+    document.getElementById('rl-datore').value    = datore;
+    document.getElementById('rl-ccnl').value      = ccnl;
+    document.getElementById('rl-tipo').value      = tipo;
+    document.getElementById('rl-qualifica').value = qualifica;
+    document.getElementById('rl-inizio').value    = '';
+    document.getElementById('rl-fine').value      = '';
+    document.getElementById('rl-note-extra').value = '';
+    toast('Rapporto duplicato — inserisci le nuove date', 'success');
+  }, 200);
+}
+
 // ── RAPPORTI DI LAVORO (pratiche tag='rapporto') ─────────────────
 function rlApriModal(clienteId, praticaId) {
   const p = praticaId ? APP.pratiche.find(x => x.id === praticaId) : null;
   let rd = {}; try { rd = JSON.parse(p?.note || '{}'); } catch(e) {}
   document.getElementById('modal-rl-title').textContent = praticaId ? 'Modifica rapporto di lavoro' : 'Nuovo rapporto di lavoro';
+  document.getElementById('rl-btn-duplica').style.display = praticaId ? 'inline-flex' : 'none';
   document.getElementById('rl-edit-id').value    = praticaId || '';
   document.getElementById('rl-cliente-id').value = clienteId;
   document.getElementById('rl-datore').value     = rd.datore    || '';
