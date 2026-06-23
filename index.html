@@ -2370,16 +2370,6 @@ tbody td{padding:10px 14px;vertical-align:middle}
       <div class="field"><label>Referente interno</label><input id="p-referente" placeholder="Es. Biagio"></div>
       <div class="field"><label>Note</label><textarea id="p-note" placeholder="Note sulla pratica…"></textarea></div>
 
-      <!-- MODELLI DA PRECOMPILARE -->
-      <div class="field">
-        <label style="display:flex;align-items:center;justify-content:space-between">
-          <span>Modelli da precompilare</span>
-          <button type="button" onclick="pratModelloAggiungi()" style="border:none;background:none;cursor:pointer;color:#185FA5;font-size:13px;padding:0;display:flex;align-items:center;gap:4px">
-            <i class="ti ti-plus"></i> Aggiungi modello
-          </button>
-        </label>
-        <div id="p-modelli-lista" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="chiudiModal('modal-pratica')">Annulla</button>
@@ -2388,19 +2378,6 @@ tbody td{padding:10px 14px;vertical-align:middle}
   </div>
 </div>
 
-<!-- MODAL SELEZIONE MODELLO PER PRATICA -->
-<div class="modal-wrap" id="modal-scegli-modello">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header">
-      <h3>Scegli modello da precompilare</h3>
-      <button class="modal-close" onclick="chiudiModal('modal-scegli-modello')"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="modal-body">
-      <input id="scegli-mod-search" type="text" placeholder="Cerca modello…" oninput="pratModelloRenderScelta()" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:12px">
-      <div id="scegli-mod-lista" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
-    </div>
-  </div>
-</div>
 
 <!-- TOOLTIP PLANNING -->
 <div class="plan-tooltip" id="plan-tooltip"></div>
@@ -3888,7 +3865,7 @@ async function detPrecompilaModello(modelloId) {
         const nomeLocale = nomeCompleto.split('.').pop();
         const valore = mappaCampi[nomeLocale] || mappaCampi[nomeCompleto.replace(/[\s\-\.]/g,'_')] || null;
         if (valore !== null) {
-          try { if (campo.constructor.name === 'PDFTextField') { campo.setText(valore); compilato = true; } } catch(e) {}
+          try { campo.setText(valore); compilato = true; } catch(e) {}
         }
       });
     } catch(e) {}
@@ -5290,7 +5267,7 @@ async function pratPrecompilaEAllegaModelli(praticaId, clienteId) {
           const valore = mappaCampi[nomeCampo] || mappaCampi[campo.getName().toLowerCase()] || null;
           if (valore !== null) {
             try {
-              if (campo.constructor.name === 'PDFTextField') campo.setText(valore);
+              try { campo.setText(valore); } catch(e) {}
               compilato = true;
             } catch(e) {}
           }
