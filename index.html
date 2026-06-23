@@ -2369,10 +2369,35 @@ tbody td{padding:10px 14px;vertical-align:middle}
       </div>
       <div class="field"><label>Referente interno</label><input id="p-referente" placeholder="Es. Biagio"></div>
       <div class="field"><label>Note</label><textarea id="p-note" placeholder="Note sulla pratica…"></textarea></div>
+
+      <!-- MODELLI DA PRECOMPILARE -->
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Modelli da precompilare</span>
+          <button type="button" onclick="pratModelloAggiungi()" style="border:none;background:none;cursor:pointer;color:#185FA5;font-size:13px;padding:0;display:flex;align-items:center;gap:4px">
+            <i class="ti ti-plus"></i> Aggiungi modello
+          </button>
+        </label>
+        <div id="p-modelli-lista" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="chiudiModal('modal-pratica')">Annulla</button>
       <button class="btn-primary" onclick="salvaPratica()"><i class="ti ti-device-floppy"></i>Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SELEZIONE MODELLO PER PRATICA -->
+<div class="modal-wrap" id="modal-scegli-modello">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3>Scegli modello da precompilare</h3>
+      <button class="modal-close" onclick="chiudiModal('modal-scegli-modello')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input id="scegli-mod-search" type="text" placeholder="Cerca modello…" oninput="pratModelloRenderScelta()" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;margin-bottom:12px">
+      <div id="scegli-mod-lista" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto"></div>
     </div>
   </div>
 </div>
@@ -3341,6 +3366,7 @@ function apriModalPratica(clienteId) {
   document.getElementById('p-note').value = '';
   document.getElementById('p-mega').value = '';
   _pratR2Files = []; pratR2RenderLista();
+  _pratModelliSelezionati = []; pratModelloRenderLista();
   document.getElementById('modal-pratica').classList.add('open');
 }
 
@@ -3376,6 +3402,7 @@ function apriModalModificaPratica(id) {
   document.getElementById('p-note').value      = p.note || '';
   document.getElementById('p-mega').value      = p.mega_link || '';
   _pratR2Files = []; pratR2RenderLista();
+  _pratModelliSelezionati = []; pratModelloRenderLista();
   document.getElementById('modal-pratica').classList.add('open');
 }
 
@@ -3407,6 +3434,7 @@ async function salvaPratica() {
       const res = await sbPost('pratiche', { ...body, aperta_il: new Date().toISOString().split('T')[0] });
       APP.pratiche.unshift(res[0]);
       if (res[0]?.id) await pratR2UploadAll(res[0].id);
+      if (res[0]?.id) await pratPrecompilaEAllegaModelli(res[0].id, clienteId);
       toast('Pratica creata', 'success');
     }
     chiudiModal('modal-pratica');
@@ -3916,9 +3944,9 @@ async function renderDetAllegati() {
     }
     el.innerHTML = allegati.map(a => `
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f7fa">
-        <i class="ti ti-file" style="color:${a.tipo==='dichiarazione'?'#3D4FBF':a.tipo==='f24'?'#dc2626':'#185FA5'};font-size:14px;flex-shrink:0"></i>
+        <i class="ti ti-file${a.tipo==='precompilato'?'-type-pdf':''}" style="color:${a.tipo==='precompilato'?'#059669':a.tipo==='dichiarazione'?'#3D4FBF':a.tipo==='f24'?'#dc2626':'#185FA5'};font-size:14px;flex-shrink:0"></i>
         <a href="${a.url}" target="_blank" style="flex:1;font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#185FA5;text-decoration:none">${a.nome}</a>
-        ${a.tipo && a.tipo!=='generico' ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${a.tipo==='dichiarazione'?'#EEF0FD':'#FEF2F2'};color:${a.tipo==='dichiarazione'?'#3D4FBF':'#dc2626'};flex-shrink:0">${a.tipo==='dichiarazione'?'Dich.':'F24'}</span>` : ''}
+        ${a.tipo==='precompilato' ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:#ECFDF5;color:#059669;flex-shrink:0;display:flex;align-items:center;gap:3px"><i class="ti ti-wand" style="font-size:10px"></i>Precomp.</span>` : a.tipo && a.tipo!=='generico' ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${a.tipo==='dichiarazione'?'#EEF0FD':'#FEF2F2'};color:${a.tipo==='dichiarazione'?'#3D4FBF':'#dc2626'};flex-shrink:0">${a.tipo==='dichiarazione'?'Dich.':'F24'}</span>` : ''}
         <span style="font-size:11px;color:#aaa;flex-shrink:0">${a.dimensione||''}</span>
         <button class="btn-action danger" style="padding:2px 6px" onclick="detRimuoviAllegato('${a.id}','${a.path}')"><i class="ti ti-trash"></i></button>
       </div>`).join('');
@@ -5060,6 +5088,163 @@ function acGeneraCorpo(ac, c) {
     default:
       return `DICHIARAZIONE SOSTITUTIVA DI AUTOCERTIFICAZIONE\n(artt. 46 e 47 D.P.R. n. 445 del 28 dicembre 2000)\n\nIl/la sottoscritto/a ${nome},\nnato/a a ${nasc},\nresidente in ${res},\ncodice fiscale ${c.cf||'___________'},\n\nsotto la propria personale responsabilità ed a piena conoscenza della responsabilità penale prevista per le dichiarazioni false, dall'art. 76 del D.P.R. 445/2000 e dalle disposizioni del Codice Penale e dalle leggi speciali in materia,\n\nDICHIARA\n\n___________________________________________________________________________\n___________________________________________________________________________\n___________________________________________________________________________\n___________________________________________________________________________\n___________________________________________________________________________`;
   }
+}
+
+// ── MODELLI DA PRECOMPILARE NELLA PRATICA ────────────────────────
+let _pratModelliSelezionati = []; // [{id, nome, url}]
+
+function pratModelloAggiungi() {
+  if (!APP_modelli.length) caricaModelli();
+  document.getElementById('scegli-mod-search').value = '';
+  pratModelloRenderScelta();
+  document.getElementById('modal-scegli-modello').classList.add('open');
+}
+
+function pratModelloRenderScelta() {
+  const q = (document.getElementById('scegli-mod-search')?.value || '').toLowerCase();
+  let lista = APP_modelli;
+  if (q) lista = lista.filter(m => (m.nome||'').toLowerCase().includes(q) || (m.tags||[]).some(t => t.toLowerCase().includes(q)));
+  const el = document.getElementById('scegli-mod-lista');
+  if (!lista.length) { el.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Nessun modello trovato</div>'; return; }
+  el.innerHTML = lista.map(m => {
+    const giaSel = _pratModelliSelezionati.some(x => x.id === m.id);
+    return `<div onclick="pratModelloSeleziona('${m.id}','${(m.nome||'').replace(/'/g,"\\'")}','${m.url||''}')"
+      style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;border:1px solid ${giaSel?'#185FA5':'#e2e8f0'};background:${giaSel?'#EFF6FF':'#fff'};transition:.15s">
+      <i class="ti ti-file-type-pdf" style="color:#185FA5;font-size:18px;flex-shrink:0"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:#1a1a18;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nome||'—'}</div>
+        ${m.tags?.length ? `<div style="font-size:11px;color:#888">${m.tags.join(', ')}</div>` : ''}
+      </div>
+      ${giaSel ? '<i class="ti ti-check" style="color:#185FA5;flex-shrink:0"></i>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function pratModelloSeleziona(id, nome, url) {
+  const idx = _pratModelliSelezionati.findIndex(x => x.id === id);
+  if (idx >= 0) {
+    _pratModelliSelezionati.splice(idx, 1);
+  } else {
+    _pratModelliSelezionati.push({ id, nome, url });
+  }
+  pratModelloRenderScelta();
+  pratModelloRenderLista();
+  // Chiudi dopo 300ms se ne ha selezionato uno
+  if (idx < 0) setTimeout(() => chiudiModal('modal-scegli-modello'), 300);
+}
+
+function pratModelloRenderLista() {
+  const el = document.getElementById('p-modelli-lista');
+  if (!_pratModelliSelezionati.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:6px 0">Nessun modello selezionato</div>';
+    return;
+  }
+  el.innerHTML = _pratModelliSelezionati.map((m, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#EFF6FF;border:1px solid #bfdbfe;border-radius:8px">
+      <i class="ti ti-file-type-pdf" style="color:#185FA5;font-size:15px;flex-shrink:0"></i>
+      <span style="flex:1;font-size:12px;color:#1a1a18;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nome}</span>
+      <button onclick="_pratModelliSelezionati.splice(${i},1);pratModelloRenderLista()" style="border:none;background:none;cursor:pointer;color:#dc2626;font-size:14px;padding:0" title="Rimuovi"><i class="ti ti-x"></i></button>
+    </div>`).join('');
+}
+
+async function pratPrecompilaEAllegaModelli(praticaId, clienteId) {
+  if (!_pratModelliSelezionati.length) return;
+  const c = APP.clienti.find(x => x.id === clienteId);
+  if (!c) return;
+
+  // Mappa campi AcroForm comuni → dati cliente
+  const mappaCampi = {
+    // Nome e cognome
+    'nome': c.nome || '',
+    'cognome': c.cognome || '',
+    'nome_cognome': `${c.cognome||''} ${c.nome||''}`.trim(),
+    'cognome_nome': `${c.cognome||''} ${c.nome||''}`.trim(),
+    'denominazione': `${c.cognome||''} ${c.nome||''}`.trim(),
+    'intestatario': `${c.cognome||''} ${c.nome||''}`.trim(),
+    // Codice fiscale
+    'codice_fiscale': c.cf || '',
+    'cf': c.cf || '',
+    'cod_fisc': c.cf || '',
+    'codicefiscale': c.cf || '',
+    'codfisc': c.cf || '',        // AP70
+    'datanascita': c.data_nascita ? new Date(c.data_nascita).toLocaleDateString('it-IT') : '',  // AP70
+    'comune_nasc': c.luogo_nascita || '',   // AP70
+    'prov_nasc': c.provincia || '',         // AP70
+    'residenzacap': c.cap || '',            // AP70
+    'cell': c.cellulare || '',
+    'pec': c.pec || '',
+    // Data di nascita
+    'data_nascita': c.data_nascita ? new Date(c.data_nascita).toLocaleDateString('it-IT') : '',
+    'datanascita': c.data_nascita ? new Date(c.data_nascita).toLocaleDateString('it-IT') : '',
+    'nato_il': c.data_nascita ? new Date(c.data_nascita).toLocaleDateString('it-IT') : '',
+    // Luogo di nascita
+    'luogo_nascita': c.luogo_nascita || '',
+    'comune_nascita': c.luogo_nascita || '',
+    'nato_a': c.luogo_nascita || '',
+    // Residenza
+    'indirizzo': c.indirizzo || '',
+    'via': c.indirizzo || '',
+    'residenza': `${c.indirizzo||''} ${c.comune||''}`.trim(),
+    'comune': c.comune || '',
+    'cap': c.cap || '',
+    'provincia': c.provincia || '',
+    // Telefono / email
+    'telefono': c.telefono || '',
+    'tel': c.telefono || '',
+    'cellulare': c.cellulare || '',
+    'email': c.email || '',
+    // Anno corrente
+    'anno': new Date().getFullYear().toString(),
+    'data': new Date().toLocaleDateString('it-IT'),
+  };
+
+  const { PDFDocument } = PDFLib;
+
+  for (const modello of _pratModelliSelezionati) {
+    try {
+      toast(`Precompilo: ${modello.nome}…`, 'info');
+      const resp = await fetch(modello.url);
+      const pdfBytes = await resp.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+
+      let compilato = false;
+      try {
+        const form = pdfDoc.getForm();
+        const campi = form.getFields();
+        campi.forEach(campo => {
+          const nomeCampo = campo.getName().toLowerCase().replace(/[\s\-\.]/g, '_');
+          // Cerca corrispondenza nella mappa
+          const valore = mappaCampi[nomeCampo] || mappaCampi[campo.getName().toLowerCase()] || null;
+          if (valore !== null) {
+            try {
+              if (campo.constructor.name === 'PDFTextField') campo.setText(valore);
+              compilato = true;
+            } catch(e) {}
+          }
+        });
+      } catch(e) {
+        // PDF senza AcroForm — allega comunque senza precompilare
+      }
+
+      const pdfCompilatoBytes = await pdfDoc.save({ updateFieldAppearances: false });
+      const blob = new Blob([pdfCompilatoBytes], { type: 'application/pdf' });
+      const nomeFile = Date.now().toString(36) + '_' + modello.nome.replace(/[^a-zA-Z0-9._-]/g, '_') + '.pdf';
+      const file = new File([blob], nomeFile, { type: 'application/pdf' });
+      const path = r2Path.pratica(praticaId, nomeFile);
+      const url = await r2Upload(file, path);
+      await sbPost('allegati_pratiche', {
+        pratica_id: praticaId,
+        nome: modello.nome + '.pdf',
+        path, url,
+        dimensione: r2FormatSize(file.size),
+        tipo: compilato ? 'precompilato' : 'generico'
+      });
+    } catch(e) {
+      toast('Errore modello ' + modello.nome + ': ' + e.message, 'error');
+    }
+  }
+  _pratModelliSelezionati = [];
+  pratModelloRenderLista();
 }
 
 function acRiprecompila() {
