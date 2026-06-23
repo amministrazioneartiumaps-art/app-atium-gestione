@@ -3343,7 +3343,7 @@ function apriModalPratica(clienteId) {
   document.getElementById('p-note').value = '';
   document.getElementById('p-mega').value = '';
   _pratR2Files = []; pratR2RenderLista();
-  _pratModelliSelezionati = []; pratModelloRenderLista();
+  _pratModelliSelezionati = [];
   document.getElementById('modal-pratica').classList.add('open');
 }
 
@@ -3379,7 +3379,7 @@ function apriModalModificaPratica(id) {
   document.getElementById('p-note').value      = p.note || '';
   document.getElementById('p-mega').value      = p.mega_link || '';
   _pratR2Files = []; pratR2RenderLista();
-  _pratModelliSelezionati = []; pratModelloRenderLista();
+  _pratModelliSelezionati = [];
   document.getElementById('modal-pratica').classList.add('open');
 }
 
@@ -3406,8 +3406,6 @@ async function salvaPratica() {
       const idx = APP.pratiche.findIndex(x => x.id === _editPraticaId);
       if (idx >= 0) APP.pratiche[idx] = res[0] || { ...APP.pratiche[idx], ...body };
       if (_pratR2Files.length) await pratR2UploadAll(_editPraticaId);
-      if (_pratModelliSelezionati.length) await pratPrecompilaEAllegaModelli(_editPraticaId, clienteId);
-      if (_pratModelliSelezionati.length) setTimeout(renderDetAllegati, 500);
       toast('Pratica aggiornata', 'success');
     } else {
       const res = await sbPost('pratiche', { ...body, aperta_il: new Date().toISOString().split('T')[0] });
@@ -5185,6 +5183,7 @@ function pratModelloSeleziona(id, nome, url) {
 
 function pratModelloRenderLista() {
   const el = document.getElementById('p-modelli-lista');
+  if (!el) return;
   if (!_pratModelliSelezionati.length) {
     el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:6px 0">Nessun modello selezionato</div>';
     return;
@@ -5267,7 +5266,7 @@ async function pratPrecompilaEAllegaModelli(praticaId, clienteId) {
           const valore = mappaCampi[nomeCampo] || mappaCampi[campo.getName().toLowerCase()] || null;
           if (valore !== null) {
             try {
-              try { campo.setText(valore); } catch(e) {}
+              try { campo.setText(valore); } catch(e2) {}
               compilato = true;
             } catch(e) {}
           }
