@@ -3441,6 +3441,10 @@ async function salvaPratica() {
     chiudiModal('modal-pratica');
     renderPratiche(); renderDashboard();
     if (APP.clienteCorrenteId === clienteId) renderSchedaCliente(clienteId);
+    // Se c'erano modelli da precompilare, apri la scheda pratica per mostrare gli allegati
+    if (_pratModelliSelezionati !== undefined && APP.pratiche[0]?.id) {
+      apriSchedaPratica(APP.pratiche[0].id);
+    }
   } catch(e) { toast('Errore: ' + e.message, 'error'); }
 }
 
