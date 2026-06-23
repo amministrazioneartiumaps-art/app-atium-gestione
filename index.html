@@ -3838,12 +3838,78 @@ function renderDetModelli(tipoPratica) {
       ${m.storage_url ? `
         <button class="btn-action" style="padding:4px 10px;color:#185FA5" onclick="window.open('${m.storage_url}','_blank')"><i class="ti ti-eye"></i> Apri</button>
         <button class="btn-action" style="padding:4px 10px" onclick="modScarica('${m.storage_url}','${(m.nome||'modello').replace(/'/g,"\\'")}')"><i class="ti ti-download"></i></button>
+        <button class="btn-action primary" style="padding:4px 10px;font-size:11px" onclick="detPrecompilaModello('${m.id}')" title="Precompila con dati cliente e allega"><i class="ti ti-wand"></i> Allega</button>
       ` : '<span style="font-size:11px;color:#aaa">No file</span>'}
     </div>`).join('');
 }
 
 function detModifica() {
   apriModalModificaPratica(_detPraticaId);
+}
+
+async function detPrecompilaModello(modelloId) {
+  const p = APP.pratiche.find(x => x.id === _detPraticaId);
+  if (!p) return;
+  const c = APP.clienti.find(x => x.id === p.cliente_id);
+  if (!c) return;
+  if (!APP_modelli.length) await caricaModelli();
+  const m = APP_modelli.find(x => x.id === modelloId);
+  if (!m?.storage_url) { toast('Modello senza file', 'error'); return; }
+  const nomeModello = m.nome || 'modello';
+  toast(`Precompilo: ${nomeModello}…`, 'info');
+  try {
+    const { PDFDocument } = PDFLib;
+    const dn = c.data_nascita ? new Date(c.data_nascita).toLocaleDateString('it-IT') : '';
+    const mappaCampi = {
+      'nome': c.nome||'', 'cognome': c.cognome||'',
+      'nome_cognome': `${c.cognome||''} ${c.nome||''}`.trim(),
+      'cognome_nome': `${c.cognome||''} ${c.nome||''}`.trim(),
+      'codice_fiscale': c.cf||'', 'cf': c.cf||'', 'codfisc': c.cf||'', 'codicefiscale': c.cf||'',
+      'data_nascita': dn, 'datanascita': dn, 'nato_il': dn,
+      'luogo_nascita': c.luogo_nascita||'', 'comune_nascita': c.luogo_nascita||'', 'comune_nasc': c.luogo_nascita||'',
+      'prov_nasc': c.provincia||'', 'stato_nasc': 'ITALIA',
+      'indirizzo': c.indirizzo||'', 'via': c.indirizzo||'',
+      'comune': c.comune||'', 'cap': c.cap||'', 'residenzacap': c.cap||'',
+      'provincia': c.provincia||'', 'prov_res': c.provincia||'',
+      'telefono': c.telefono||'', 'tel': c.telefono||'', 'num_tel': c.telefono||'',
+      'cellulare': c.cellulare||'', 'cell': c.cellulare||'', 'num_cell': c.cellulare||'',
+      'email': c.email||'', 'pec': c.pec||'',
+      'anno': new Date().getFullYear().toString(),
+      'data': new Date().toLocaleDateString('it-IT'),
+    };
+    const resp = await fetch(m.storage_url);
+    const pdfBytes = await resp.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+    let compilato = false;
+    try {
+      const form = pdfDoc.getForm();
+      form.getFields().forEach(campo => {
+        const nomeCompleto = campo.getName().toLowerCase();
+        const nomeLocale = nomeCompleto.split('.').pop();
+        const valore = mappaCampi[nomeLocale] || mappaCampi[nomeCompleto.replace(/[\s\-\.]/g,'_')] || null;
+        if (valore !== null) {
+          try { if (campo.constructor.name === 'PDFTextField') { campo.setText(valore); compilato = true; } } catch(e) {}
+        }
+      });
+    } catch(e) {}
+    const pdfBytes2 = await pdfDoc.save({ updateFieldAppearances: false });
+    const blob = new Blob([pdfBytes2], { type: 'application/pdf' });
+    const nomeFile = Date.now().toString(36) + '_' + (m.nome||'modello').replace(/[^a-zA-Z0-9._-]/g,'_') + '.pdf';
+    const file = new File([blob], nomeFile, { type: 'application/pdf' });
+    const path = r2Path.pratica(_detPraticaId, nomeFile);
+    const url = await r2Upload(file, path);
+    await sbPost('allegati_pratiche', {
+      pratica_id: _detPraticaId,
+      nome: (m.nome||'modello') + (compilato ? ' (precompilato)' : '') + '.pdf',
+      path, url,
+      dimensione: r2FormatSize(file.size),
+      tipo: 'precompilato'
+    });
+    await renderDetAllegati();
+    toast('Allegato salvato ✓', 'success');
+  } catch(e) {
+    toast('Errore: ' + e.message, 'error');
+  }
 }
 
 async function detElimina() {
