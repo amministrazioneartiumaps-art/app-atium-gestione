@@ -3430,6 +3430,7 @@ async function salvaPratica() {
       if (idx >= 0) APP.pratiche[idx] = res[0] || { ...APP.pratiche[idx], ...body };
       if (_pratR2Files.length) await pratR2UploadAll(_editPraticaId);
       if (_pratModelliSelezionati.length) await pratPrecompilaEAllegaModelli(_editPraticaId, clienteId);
+      if (_pratModelliSelezionati.length) setTimeout(renderDetAllegati, 500);
       toast('Pratica aggiornata', 'success');
     } else {
       const res = await sbPost('pratiche', { ...body, aperta_il: new Date().toISOString().split('T')[0] });
@@ -3437,14 +3438,15 @@ async function salvaPratica() {
       if (res[0]?.id) await pratR2UploadAll(res[0].id);
       if (res[0]?.id) await pratPrecompilaEAllegaModelli(res[0].id, clienteId);
       toast('Pratica creata', 'success');
+      chiudiModal('modal-pratica');
+      renderPratiche(); renderDashboard();
+      if (APP.clienteCorrenteId === clienteId) renderSchedaCliente(clienteId);
+      if (res[0]?.id) { apriSchedaPratica(res[0].id); setTimeout(renderDetAllegati, 500); }
+      return;
     }
     chiudiModal('modal-pratica');
     renderPratiche(); renderDashboard();
     if (APP.clienteCorrenteId === clienteId) renderSchedaCliente(clienteId);
-    // Se c'erano modelli da precompilare, apri la scheda pratica per mostrare gli allegati
-    if (_pratModelliSelezionati !== undefined && APP.pratiche[0]?.id) {
-      apriSchedaPratica(APP.pratiche[0].id);
-    }
   } catch(e) { toast('Errore: ' + e.message, 'error'); }
 }
 
