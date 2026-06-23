@@ -3429,6 +3429,7 @@ async function salvaPratica() {
       const idx = APP.pratiche.findIndex(x => x.id === _editPraticaId);
       if (idx >= 0) APP.pratiche[idx] = res[0] || { ...APP.pratiche[idx], ...body };
       if (_pratR2Files.length) await pratR2UploadAll(_editPraticaId);
+      if (_pratModelliSelezionati.length) await pratPrecompilaEAllegaModelli(_editPraticaId, clienteId);
       toast('Pratica aggiornata', 'success');
     } else {
       const res = await sbPost('pratiche', { ...body, aperta_il: new Date().toISOString().split('T')[0] });
@@ -5093,8 +5094,8 @@ function acGeneraCorpo(ac, c) {
 // ── MODELLI DA PRECOMPILARE NELLA PRATICA ────────────────────────
 let _pratModelliSelezionati = []; // [{id, nome, url}]
 
-function pratModelloAggiungi() {
-  if (!APP_modelli.length) caricaModelli();
+async function pratModelloAggiungi() {
+  if (!APP_modelli.length) await caricaModelli();
   document.getElementById('scegli-mod-search').value = '';
   pratModelloRenderScelta();
   document.getElementById('modal-scegli-modello').classList.add('open');
