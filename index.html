@@ -1566,7 +1566,7 @@ tbody td{padding:10px 14px;vertical-align:middle}
           <div class="field-row col2">
             <div class="field">
               <label>Numero ricevuta</label>
-              <input id="ric-numero" type="number" min="1" style="font-family:monospace;font-size:15px;font-weight:600">
+              <input id="ric-numero" type="text" readonly value="Assegnato all'emissione" style="font-family:monospace;font-size:13px;font-weight:600;color:#888;background:#f8fafc">
             </div>
             <div class="field">
               <label>Data</label>
@@ -1785,8 +1785,10 @@ tbody td{padding:10px 14px;vertical-align:middle}
         </div>
       </div>
       <div class="field">
-        <label>Prossimo numero ricevuta</label>
-        <input id="imp-ric-numero" type="number" min="1" placeholder="Es. 17">
+        <label>Numerazione ricevute</label>
+        <div style="font-size:12px;color:#888;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+          Assegnata automaticamente dal programma ricevute condiviso (Artium APS) — non più impostabile da qui.
+        </div>
       </div>
       <div style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 6px;display:flex;align-items:center;gap:6px"><i class="ti ti-brand-whatsapp"></i> Modelli WhatsApp</div>
       <p style="font-size:12px;color:#888;margin-bottom:12px">Usa <code>{nome}</code>, <code>{pratica}</code>, <code>{stato}</code>, <code>{studio}</code>, <code>{referente}</code> come variabili automatiche.</p>
@@ -4180,7 +4182,6 @@ function apriImpostazioni() {
   set('imp-tel', imp.tel); set('imp-email', imp.email); set('imp-pec', imp.pec);
   set('imp-tess-prezzo', imp.tessPrezzo || 10);
   set('imp-serv-prezzo', imp.servPrezzo || 25);
-  set('imp-ric-numero',  imp.ricNumero  || 1);
 
   // Tema
   impAggiornaTema(imp.tema);
@@ -4311,7 +4312,6 @@ function salvaImpostazioni() {
     tel: get('imp-tel'), email: get('imp-email'), pec: get('imp-pec'),
     tessPrezzo: parseFloat(document.getElementById('imp-tess-prezzo').value) || 10,
     servPrezzo: parseFloat(document.getElementById('imp-serv-prezzo').value) || 25,
-    ricNumero:  parseInt(document.getElementById('imp-ric-numero').value) || imp.ricNumero || 1,
     tema
   };
   salvaImpostazioniLocale(nuove);
@@ -5432,11 +5432,31 @@ let _ricStorico = [];
 
 function ricInit() {
   const imp = getImpostazioni();
-  document.getElementById('ric-numero').value    = imp.ricNumero || 1;
+  document.getElementById('ric-numero').value    = "Assegnato all'emissione";
   document.getElementById('ric-data').value      = new Date().toISOString().split('T')[0];
   document.getElementById('ric-tess-prezzo').value = imp.tessPrezzo || 10;
   document.getElementById('ric-tess-anno').value   = new Date().getFullYear();
   document.getElementById('ric-serv-prezzo').value  = imp.servPrezzo || 25;
+}
+
+// ── PROGRAMMA RICEVUTE CONDIVISO (Artium APS) ─────────────────────
+// Stessa numerazione unica usata da Wjboo. Sostituisce la vecchia
+// numerazione/storico locale in localStorage.
+const RICEVUTE_API_URL = 'https://artium-ricevute.shiny-glade-a662.workers.dev';
+const RICEVUTE_API_KEY = 'INSERISCI_QUI_LA_STESSA_API_KEY_DEL_WORKER'; // vedi wrangler secret put API_KEY
+
+async function ricevuteFetch(path, opts = {}) {
+  const res = await fetch(RICEVUTE_API_URL + path, {
+    method: opts.method || 'GET',
+    headers: Object.assign({ 'X-Api-Key': RICEVUTE_API_KEY, 'Content-Type': 'application/json' }, opts.headers || {}),
+    body: opts.body
+  });
+  if (!res.ok) {
+    let msg = 'Errore ' + res.status;
+    try { const j = await res.json(); if (j.error) msg = j.error; } catch (e) {}
+    throw new Error(msg);
+  }
+  return res.json();
 }
 
 // ── RICERCA SOCIO ────────────────────────────────────────────────
@@ -5608,14 +5628,36 @@ async function ricStampa() {
   if (!c) { toast('Seleziona il socio', 'error'); return; }
   const voci   = ricGetVoci();
   if (!voci.length) { toast('Aggiungi almeno una voce', 'error'); return; }
-  const numero  = parseInt(document.getElementById('ric-numero').value) || 1;
   const data    = document.getElementById('ric-data').value;
   const dataFmt = new Date(data+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
   const totale  = voci.reduce((s,v) => s + v.prezzo, 0);
   const pag     = ricGetPagamento();
   const pagLabel = pag === 'contante' ? 'Importo ricevuto in contanti' : 'Importo ricevuto tramite bonifico bancario';
   const nomeC   = `${(c.cognome||'').toUpperCase()} ${c.nome||''}`.trim();
-  const anno    = new Date().getFullYear();
+
+  // Chiede il numero al programma ricevute condiviso (Artium APS) — numerazione unica con Wjboo
+  let receipt;
+  toast('Richiesta numero ricevuta…', 'success');
+  try {
+    receipt = await ricevuteFetch('/receipts', {
+      method: 'POST',
+      body: JSON.stringify({
+        context: 'protezione360',
+        issued_to: nomeC,
+        issued_to_fiscal_code: c.cf || null,
+        legal_entity_type: 'individual',
+        description: voci.map(v => v.desc).join(', '),
+        amount: totale,
+        origin: pag,
+        meta: { voci, pagamento: pag }
+      })
+    });
+  } catch (e) {
+    toast('Impossibile ottenere il numero ricevuta: ' + e.message, 'error');
+    return;
+  }
+  const numero = receipt.number;
+  const anno   = receipt.year;
 
   // Apri finestra di stampa
   const win = window.open('', '_blank', 'width=800,height=600');
@@ -5680,30 +5722,26 @@ async function ricStampa() {
   </body></html>`);
   win.document.close();
 
-  // Salva in storico locale e incrementa numero
-  const record = {
-    id: Date.now().toString(36), numero, data,
-    cliente_id: c.id, nomeC, voci, totale, pagamento: pag,
-    emessa_il: new Date().toISOString()
-  };
-  const storico = JSON.parse(localStorage.getItem('ric_storico') || '[]');
-  storico.unshift(record);
-  localStorage.setItem('ric_storico', JSON.stringify(storico));
-  _ricStorico = storico;
+  // Segna la ricevuta come emessa/stampata sul programma condiviso
+  try { await ricevuteFetch('/receipts/' + receipt.id, { method: 'PATCH', body: JSON.stringify({ status: 'sent' }) }); } catch(e) {}
 
-  // Incrementa numero progressivo
-  const nuovoNum = numero + 1;
-  imp.ricNumero = nuovoNum;
-  salvaImpostazioniLocale(imp);
-  document.getElementById('ric-numero').value = nuovoNum;
-
-  ricRenderStorico();
-  toast(`Ricevuta N° ${numero} generata`, 'success');
+  document.getElementById('ric-numero').value = "Assegnato all'emissione";
+  ricCaricaStorico();
+  toast(`Ricevuta N° ${String(numero).padStart(4,'0')}/${anno} generata`, 'success');
 }
 
 // ── STORICO RICEVUTE ─────────────────────────────────────────────
-function ricCaricaStorico() {
-  _ricStorico = JSON.parse(localStorage.getItem('ric_storico') || '[]');
+// Ora letto dal programma ricevute condiviso (Artium APS), non più da localStorage
+async function ricCaricaStorico() {
+  const tbody = document.getElementById('tbody-ricevute');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Caricamento…</div></td></tr>';
+  try {
+    _ricStorico = await ricevuteFetch('/receipts?context=protezione360&limit=50');
+  } catch (e) {
+    _ricStorico = [];
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Errore nel caricare lo storico: ' + e.message + '</div></td></tr>';
+    return;
+  }
   ricRenderStorico();
 }
 
@@ -5715,29 +5753,23 @@ function ricRenderStorico() {
     return;
   }
   tbody.innerHTML = _ricStorico.slice(0,50).map(r => {
-    const anno = r.data ? r.data.split('-')[0] : '—';
-    const dataFmt = r.data ? new Date(r.data+'T12:00:00').toLocaleDateString('it-IT') : '—';
-    const vociLabel = (r.voci||[]).map(v=>v.desc).join(', ');
+    const dataFmt = r.created_at ? new Date(r.created_at).toLocaleDateString('it-IT') : '—';
+    const pagamento = (r.meta && r.meta.pagamento) || r.origin || 'contante';
     return `<tr>
-      <td style="font-family:monospace;font-weight:600;color:#185FA5">${String(r.numero||'?').padStart(4,'0')}/${anno}</td>
+      <td style="font-family:monospace;font-weight:600;color:#185FA5">${String(r.number||'?').padStart(4,'0')}/${r.year||''}</td>
       <td style="font-size:12px">${dataFmt}</td>
-      <td class="td-nome">${r.nomeC||'—'}</td>
-      <td style="font-size:11px;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${vociLabel}</td>
-      <td style="font-weight:600;color:#185FA5">€ ${(r.totale||0).toLocaleString('it-IT',{minimumFractionDigits:2})}</td>
-      <td><span class="badge ${r.pagamento==='bonifico'?'badge-corso':'badge-completata'}" style="font-size:10px">${r.pagamento==='bonifico'?'Bonifico':'Contante'}</span></td>
+      <td class="td-nome">${r.issued_to||'—'}</td>
+      <td style="font-size:11px;color:#888;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.description||''}</td>
+      <td style="font-weight:600;color:#185FA5">€ ${(parseFloat(r.amount)||0).toLocaleString('it-IT',{minimumFractionDigits:2})}</td>
+      <td><span class="badge ${pagamento==='bonifico'?'badge-corso':'badge-completata'}" style="font-size:10px">${pagamento==='bonifico'?'Bonifico':'Contante'}</span></td>
       <td><div class="actions">
-        <button class="btn-action danger" style="padding:3px 7px" onclick="ricEliminaStorico('${r.id}')"><i class="ti ti-trash"></i></button>
+        <button class="btn-action" style="padding:3px 7px" onclick="window.open('${r.pdf_url||''}','_blank')" title="Apri PDF"><i class="ti ti-file-text"></i></button>
       </div></td>
     </tr>`;
   }).join('');
 }
-
-function ricEliminaStorico(id) {
-  if (!confirm('Eliminare questa ricevuta dallo storico?')) return;
-  _ricStorico = _ricStorico.filter(r => r.id !== id);
-  localStorage.setItem('ric_storico', JSON.stringify(_ricStorico));
-  ricRenderStorico();
-}
+// Nota: le ricevute numerate non sono più eliminabili da qui — sono un
+// documento ufficiale del registro condiviso, non più solo un dato locale.
 
 // ── NOTIFICHE ────────────────────────────────────────────────────
 let _notifStorico = [];
