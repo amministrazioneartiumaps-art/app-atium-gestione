@@ -7711,7 +7711,13 @@ async function planCarica() {
         ora: '', titolo: `${(c.cognome||'').toUpperCase()} ${c.nome||''} — tessera n°${c.tessera||'—'}`,
         cliente_id: c.id, origine: 'tessera'
       }));
-    _planEventi = [...evtApp, ...evtPren, ...evtTessere];
+    // Orari già occupati su wjboo (agenda di Biagio): solo lettura, niente dati cliente
+    const evtWjboo = (await wjbooOccupati(inizio, fine)).map((w, i) => ({
+      id: 'wjboo_' + i, tipo: 'wjboo', data: planDataLocale(w.slot_start),
+      ora: new Date(w.slot_start).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),
+      titolo: 'Occupato wjboo', origine: 'wjboo'
+    }));
+    _planEventi = [...evtApp, ...evtPren, ...evtTessere, ...evtWjboo];
     planRenderGriglia();
   } catch(e) { toast('Errore caricamento planning: ' + e.message, 'error'); }
 }
@@ -7754,6 +7760,7 @@ function planEvtHtml(e) {
     tessera:      {bg:'#fee2e2',color:'#991b1b',icon:'ti-id-badge'},
     prenotazione: {bg:'#dbeafe',color:'#1e40af',icon:'ti-clock'},
     standard:     {bg:'#dbeafe',color:'#1e40af',icon:'ti-clock'},
+    wjboo:        {bg:'#f1f5f9',color:'#475569',icon:'ti-lock'},
   };
   const col = colori[e.tipo] || colori['appuntamento'];
   const c = e.cliente_id ? APP.clienti.find(x => x.id === e.cliente_id) : null;
@@ -7830,6 +7837,7 @@ function planClickGiorno(dataStr) {
 }
 
 function planClickEvento(id, origine) {
+  if (origine === 'wjboo') { toast('Orario occupato su wjboo: non prenotabile qui', 'error'); return; }
   const e = _planEventi.find(x => x.id === id);
   if (!e) return;
   const c = e.cliente_id ? APP.clienti.find(x => x.id === e.cliente_id) : null;
@@ -7892,6 +7900,40 @@ function evtApriModifica(id, origine) {
   document.getElementById('modal-evento-modifica').classList.add('open');
 }
 
+// ── AGENDA wjboo: niente sovrapposizioni con gli appuntamenti wjboo di Biagio ──
+// wjboo espone solo inizio/fine degli orari occupati (nessun dato personale).
+// Gli appuntamenti CAF durano un'ora. Nota/scadenza/tessera non occupano l'agenda.
+const WJBOO_SB_URL = 'https://tsknvacxelkypwfortvo.supabase.co';
+const WJBOO_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRza252YWN4ZWxreXB3Zm9ydHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzA1MjgsImV4cCI6MjA5NzYwNjUyOH0.pEdw4cibbqgaTLNj_GVdGyNsP_w9BNo6zWhSOq2hPSk';
+const CAF_DURATA_MIN = 60;
+const TIPI_SENZA_ORARIO = ['nota', 'scadenza', 'tessera'];
+
+function planDataLocale(iso) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function wjbooOccupati(daIso, aIso) {
+  try {
+    const r = await fetch(`${WJBOO_SB_URL}/rest/v1/rpc/caf_wjboo_busy_slots`, {
+      method: 'POST',
+      headers: { apikey: WJBOO_SB_KEY, Authorization: 'Bearer ' + WJBOO_SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_from: daIso, p_to: aIso })
+    });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch (e) { return []; }
+}
+
+// true se l'orario [inizio, inizio+60'] si sovrappone a un appuntamento wjboo
+async function orarioOccupatoWjboo(dataOraIso, tipo) {
+  if (TIPI_SENZA_ORARIO.includes(tipo)) return false;
+  const inizio = new Date(dataOraIso);
+  const fine = new Date(inizio.getTime() + CAF_DURATA_MIN * 60000);
+  const occ = await wjbooOccupati(inizio.toISOString(), fine.toISOString());
+  return occ.length > 0;
+}
+
 async function evtModificaSalva() {
   const id      = document.getElementById('evtm-id').value;
   const titolo  = document.getElementById('evtm-titolo').value.trim();
@@ -7902,6 +7944,9 @@ async function evtModificaSalva() {
   const cId     = document.getElementById('evtm-cliente').value || null;
   if (!titolo) { toast('Inserisci un titolo', 'error'); return; }
   if (!data)   { toast('Inserisci una data', 'error'); return; }
+  if (await orarioOccupatoWjboo(new Date(`${data}T${ora}:00`).toISOString(), tipo)) {
+    toast('Orario già occupato su wjboo: scegline un altro', 'error'); return;
+  }
   try {
     await sbPatch('appuntamenti', id, {
       titolo, data_ora: new Date(`${data}T${ora}:00`).toISOString(),
@@ -7929,6 +7974,9 @@ async function evtElimina(id, origine) {
 async function evtConfermaPrenotazione(id) {
   const e = _planEventi.find(x => x.id === id);
   if (!e) return;
+  if (await orarioOccupatoWjboo(new Date(`${e.data}T${e.ora||'09:00'}:00`).toISOString(), 'standard')) {
+    toast('Orario già occupato su wjboo: sposta la prenotazione prima di confermarla', 'error'); return;
+  }
   try {
     // Crea appuntamento dalla prenotazione
     await sbPost('appuntamenti', {
@@ -7967,6 +8015,9 @@ async function evtSalva() {
   if (!data)   { toast('Inserisci una data', 'error'); return; }
   try {
     const dataOra = new Date(`${data}T${ora}:00`).toISOString();
+    if (await orarioOccupatoWjboo(dataOra, tipo)) {
+      toast('Orario già occupato su wjboo: scegline un altro', 'error'); return;
+    }
     await sbPost('appuntamenti', {
       cliente_id: cId, titolo, data_ora: dataOra,
       tipo, stato: 'confermato', note, luogo: 'Sede principale'
