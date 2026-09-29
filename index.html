@@ -3938,7 +3938,15 @@ function detEmail() {
   const imp = getImpostazioni();
   const soggetto = `Aggiornamento pratica ${p?.tipo||''} — ${imp.nome||''}`;
   const corpo = waInterpolaMessaggio('Gentile {nome},\n\nla informiamo che la sua pratica {pratica} ({anno}) è attualmente in stato: {stato}.\n\nPer qualsiasi informazione rimaniamo a disposizione.\n\nCordiali saluti,\n{studio}'.replace('{anno}', p?.anno||''), c, p);
-  window.open(`mailto:${c.email}?subject=${encodeURIComponent(soggetto)}&body=${encodeURIComponent(corpo)}`, '_blank');
+  apriGmail(c.email, soggetto, corpo);
+}
+
+// Apre la composizione di Gmail sul web (invece del programma di posta predefinito)
+function apriGmail(to, soggetto, corpo) {
+  let url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to||'')}`;
+  if (soggetto) url += `&su=${encodeURIComponent(soggetto)}`;
+  if (corpo) url += `&body=${encodeURIComponent(corpo)}`;
+  window.open(url, '_blank');
 }
 
 // ── ALLEGATI R2 ──────────────────────────────────────────────────
@@ -4807,7 +4815,7 @@ function renderRubrica() {
       ${d.email ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
         <i class="ti ti-mail" style="color:#888;font-size:14px;flex-shrink:0"></i>
         <span style="font-size:12px;color:#555;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.email}</span>
-        <button onclick="window.open('mailto:${d.email}','_blank')" style="padding:3px 10px;background:#eff6ff;color:#185FA5;border:1px solid #bfdbfe;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;display:flex;align-items:center;gap:4px"><i class="ti ti-mail" style="font-size:12px"></i> Scrivi email</button>
+        <button onclick="apriGmail('${d.email}')" style="padding:3px 10px;background:#eff6ff;color:#185FA5;border:1px solid #bfdbfe;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;display:flex;align-items:center;gap:4px"><i class="ti ti-mail" style="font-size:12px"></i> Scrivi email</button>
       </div>` : ''}
       ${tel ? `<div style="display:flex;align-items:center;gap:8px">
         <i class="ti ti-phone" style="color:#888;font-size:14px;flex-shrink:0"></i>
